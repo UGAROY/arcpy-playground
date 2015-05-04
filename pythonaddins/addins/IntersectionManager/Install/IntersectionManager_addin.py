@@ -42,8 +42,8 @@ class Configuration(object):
     def dlg(self):
         """Return the configuration dialog."""
         if self._dlg is None:
-            from IMDialogs import RenameDialog
-            self._dlg = RenameDialog()
+            from IMDialogs import ConfigurationDialog
+            self._dlg = ConfigurationDialog()
         return self._dlg
 
     def __init__(self):
