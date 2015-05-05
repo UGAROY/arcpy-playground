@@ -44,6 +44,7 @@ class Configuration(object):
         if self._dlg is None:
             from IMDialogs import ConfigurationDialog
             self._dlg = ConfigurationDialog()
+        self._dlg.LoadDefaultValues()
         return self._dlg
 
     def __init__(self):
