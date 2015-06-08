@@ -2,3 +2,5 @@
 pythonaddins/addin_assistant/
 test.py
 pythonaddins/addins/IntersectionManager/IntersectionManager.esriaddin
+*.pyc
+pythonaddins/addins/IntersectionManager/Install/tss.log
