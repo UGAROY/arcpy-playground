@@ -13,6 +13,8 @@ from datetime import datetime,timedelta
 import time
 from tss_util import truncate_datetime, get_default_parameters, log_message
 
+import tss
+
 Config = ConfigParser.ConfigParser()
 init_cfg = os.path.join(os.path.dirname(__file__), "params.ini")
 updated_cfg = os.path.join(os.path.dirname(__file__), "params_updated.ini")
@@ -24,6 +26,7 @@ def readConfigFile():
         Config.read(updated_cfg)
     else:
         Config.read(init_cfg)
+
 
 
 class FileInputGroup(wx.Panel):
@@ -40,7 +43,10 @@ class FileInputGroup(wx.Panel):
         inputGroupSizer = wx.GridBagSizer(hgap=5, vgap=5)
         inputLabel = wx.StaticText(self, wx.ID_ANY, inputLabel)
         self.inputText = wx.TextCtrl(self, wx.ID_ANY)
-        png = wx.Image(os.path.join(os.path.dirname(__file__), 'DataFrame16.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
+        log_message(os.path.join(tss.get_parent_directory(__file__), "img", "DataFrame16.png"))
+        print(__file__)
+        png = wx.Image(os.path.join(tss.get_parent_directory(__file__), "img", "DataFrame16.png"), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
+
         inputButton = wx.BitmapButton(self, wx.ID_ANY, png)
         inputGroupSizer.Add(inputLabel, pos=(0, 0))
         inputGroupSizer.Add(self.inputText, pos=(1, 0), flag=wx.EXPAND)
@@ -81,7 +87,7 @@ class WorkspaceInputGroup(wx.Panel):
         inputGroupSizer = wx.GridBagSizer(hgap=5, vgap=5)
         inputLabel = wx.StaticText(self, wx.ID_ANY, inputLabel)
         self.inputText = wx.TextCtrl(self, wx.ID_ANY)
-        png = wx.Image(os.path.join(os.path.dirname(__file__), 'OpenFolder.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
+        png = wx.Image(os.path.join(tss.get_parent_directory(__file__), "img", "OpenFolder.png"), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
         inputButton = wx.BitmapButton(self, wx.ID_ANY, png)
         inputGroupSizer.Add(inputLabel, pos=(0, 0))
         inputGroupSizer.Add(self.inputText, pos=(1, 0), flag=wx.EXPAND)
@@ -162,7 +168,7 @@ class DateTimeInputGroup(wx.Panel):
         inputGroupSizer = wx.GridBagSizer(hgap=5, vgap=5)
         inputLabel = wx.StaticText(self, wx.ID_ANY, inputLabel)
         self.inputText = wx.TextCtrl(self, wx.ID_ANY)
-        png = wx.Image(os.path.join(os.path.dirname(__file__), 'Calendar.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
+        png = wx.Image(os.path.join(tss.get_parent_directory(__file__), "img", "Calendar.png"), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
         inputButton = wx.BitmapButton(self, wx.ID_ANY, png)
         inputGroupSizer.Add(inputLabel, pos=(0, 0))
         inputGroupSizer.Add(self.inputText, pos=(1, 0), flag=wx.EXPAND)
@@ -243,7 +249,7 @@ class TableGroup(wx.Panel):
         self.menu = wx.Menu()
 
         # Show how to put an icon in the menu
-        item = wx.MenuItem(self.menu, self.popupID1,"Zoom to Intersection")
+        item = wx.MenuItem(self.menu, self.popupID1, "Zoom to Intersection")
         self.Bind(wx.EVT_MENU, self.OnPopupItemSelected, item)
         self.menu.AppendItem(item)
 
@@ -267,7 +273,6 @@ class TableGroup(wx.Panel):
     def ZoomToSelectedFeature(self,event):
         from tss_util import zoom_to_selected_features
 
-
     @property
     def value(self):
         return self.data
@@ -281,7 +286,7 @@ class TableDialog(wx.Frame):
         """Initialize the Frame and add wx widgets."""
         wx.Frame.__init__(self, None, wx.ID_ANY, title="Update Intersections Info",
                           style=wx.DEFAULT_FRAME_STYLE | wx.STAY_ON_TOP)
-        self.SetIcon(wx.Icon(os.path.join(os.path.dirname(__file__), 'Tlogo.ico'), wx.BITMAP_TYPE_ICO))
+        self.SetIcon(wx.Icon(os.path.join(tss.get_parent_directory(__file__), "img", "Tlogo.ico"), wx.BITMAP_TYPE_ICO))
         self.MinSize = 400, 300
         self.MaxSize = 600, 600
         self.Bind(wx.EVT_CLOSE, self.OnClose)
@@ -344,7 +349,7 @@ class CalendarDialog(wx.Dialog):
     def __init__(self, inputLabel="Date"):
         """Initialize the Frame and add wx widgets."""
         wx.Dialog.__init__(self, None, wx.ID_ANY, title=inputLabel, style=wx.DEFAULT_FRAME_STYLE | wx.STAY_ON_TOP)
-        self.SetIcon(wx.Icon(os.path.join(os.path.dirname(__file__), 'Tlogo.ico'), wx.BITMAP_TYPE_ICO))
+        self.SetIcon(wx.Icon(os.path.join(tss.get_parent_directory(__file__), "img", "Tlogo.ico"), wx.BITMAP_TYPE_ICO))
 
         # Calendar Section
         self.calendarCtrl = calendar.CalendarCtrl(self, wx.ID_ANY, pos=(5, 5))
@@ -401,7 +406,7 @@ class ProgressBarDialog(wx.Frame):
     def __init__(self, inputLabel="Processing Task"):
 
         wx.Frame.__init__(self, None, wx.ID_ANY, title=inputLabel, style=wx.DEFAULT_FRAME_STYLE | wx.STAY_ON_TOP)
-        self.SetIcon(wx.Icon(os.path.join(os.path.dirname(__file__), 'Tlogo.ico'), wx.BITMAP_TYPE_ICO))
+        self.SetIcon(wx.Icon(os.path.join(tss.get_parent_directory(__file__), "img", "Tlogo.ico"), wx.BITMAP_TYPE_ICO))
 
         self.Bind(wx.EVT_CLOSE, self.OnClose)
 
@@ -471,7 +476,7 @@ class ConfigurationDialog(wx.Frame):
         """Initialize the Frame and add wx widgets."""
         wx.Frame.__init__(self, None, wx.ID_ANY, title="Paramters Configuration",
                           style=wx.DEFAULT_FRAME_STYLE | wx.STAY_ON_TOP)
-        self.SetIcon(wx.Icon(os.path.join(os.path.dirname(__file__), 'Tlogo.ico'), wx.BITMAP_TYPE_ICO))
+        self.SetIcon(wx.Icon(os.path.join(tss.get_parent_directory(__file__), "img", "Tlogo.ico"), wx.BITMAP_TYPE_ICO))
         self.MinSize = 500, 400
         self.MaxSize = 600, 600
         self.Bind(wx.EVT_CLOSE, self.OnClose)
@@ -623,7 +628,7 @@ class PopulateIMTablesDialog(wx.Frame):
     def __init__(self):
         wx.Frame.__init__(self, None, wx.ID_ANY, title="Populate Intersections Info",
                           style=wx.DEFAULT_FRAME_STYLE | wx.STAY_ON_TOP)
-        self.SetIcon(wx.Icon(os.path.join(os.path.dirname(__file__), 'Tlogo.ico'), wx.BITMAP_TYPE_ICO))
+        self.SetIcon(wx.Icon(os.path.join(tss.get_parent_directory(__file__), "img", "Tlogo.ico"), wx.BITMAP_TYPE_ICO))
         self.MinSize = 500, 400
         self.MaxSize = 600, 600
         self.Bind(wx.EVT_CLOSE, self.OnClose)
@@ -730,7 +735,7 @@ class UpdateTMTablesDialog(wx.Frame):
         """Initialize the Frame and add wx widgets."""
         wx.Frame.__init__(self, None, wx.ID_ANY, title="Update Intersections Info",
                           style=wx.DEFAULT_FRAME_STYLE | wx.STAY_ON_TOP)
-        self.SetIcon(wx.Icon(os.path.join(os.path.dirname(__file__), 'Tlogo.ico'), wx.BITMAP_TYPE_ICO))
+        self.SetIcon(wx.Icon(os.path.join(tss.get_parent_directory(__file__), "img", "Tlogo.ico"), wx.BITMAP_TYPE_ICO))
         self.Size = 200, 200
 
         self.Bind(wx.EVT_CLOSE, self.OnClose)
@@ -744,7 +749,7 @@ class UpdateTMTablesDialog(wx.Frame):
         font = wx.Font(11, wx.DECORATIVE, wx.ITALIC, wx.NORMAL)
         self.label.SetFont(font)
 
-        png = wx.Image(os.path.join(os.path.dirname(__file__), 'information.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
+        png = wx.Image(os.path.join(tss.get_parent_directory(__file__), "img", "information.png"), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
         self.picture = wx.StaticBitmap(contextPanel, wx.ID_ANY, png)
 
         contextSizer.Add(self.picture, 0, wx.ALL | wx.EXPAND, 10)
@@ -846,7 +851,7 @@ class SetViewDate(wx.Frame):
     def __init__(self):
         wx.Frame.__init__(self, None, wx.ID_ANY, title="Set View Date",
                           style=wx.DEFAULT_FRAME_STYLE | wx.STAY_ON_TOP)
-        self.SetIcon(wx.Icon(os.path.join(os.path.dirname(__file__), 'Tlogo.ico'), wx.BITMAP_TYPE_ICO))
+        self.SetIcon(wx.Icon(os.path.join(tss.get_parent_directory(__file__), "img", "Tlogo.ico"), wx.BITMAP_TYPE_ICO))
         self.MinSize = 500, 400
         self.MaxSize = 600, 600
         self.Bind(wx.EVT_CLOSE, self.OnClose)
