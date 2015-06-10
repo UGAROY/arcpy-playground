@@ -1,8 +1,13 @@
 import os
 import sys
+
 sys.path.append(os.path.dirname(__file__))
-import arcpy
 import pythonaddins
+
+from PopulateIMTablesDialog import PopulateIMTablesDialog
+from ConfigurationDialog import ConfigurationDialog
+from SetViewDateDialog import SetViewDateDialog
+from UpdateIMTablesDialog import UpdateIMTablesDialog
 
 
 class IntersectionManagerExt(object):
@@ -25,9 +30,13 @@ class IntersectionManagerExt(object):
         if self._enabled == False:
             configButton.enabled = False
             populateIMTablesButton.enabled = False
+            updateIMTablesButton.enabled = False
+            setViewDateButton.enabled = False
         else:
             configButton.enabled = True
             populateIMTablesButton.enabled = True
+            updateIMTablesButton.enabled = True
+            setViewDateButton.enabled = True
         return self._enabled
 
     @enabled.setter
@@ -44,7 +53,6 @@ class Configuration(object):
     def dlg(self):
         """Return the configuration dialog."""
         if self._dlg is None:
-            from IMDialogs import ConfigurationDialog
             self._dlg = ConfigurationDialog()
         self._dlg.LoadDefaultValues()
         return self._dlg
@@ -70,9 +78,8 @@ class PopulateIMTables(object):
     def dlg(self):
         """Return the configuration dialog."""
         if self._dlg is None:
-            from IMDialogs import PopulateIMTablesDialog
             self._dlg = PopulateIMTablesDialog()
-        self._dlg.LoadDefaultValues()
+        #self._dlg.LoadDefaultValues()
         return self._dlg
 
     def __init__(self):
@@ -94,9 +101,8 @@ class UpdateIMTables(object):
     def dlg(self):
         """Return the configuration dialog."""
         if self._dlg is None:
-            from IMDialogs import UpdateTMTablesDialog
-            self._dlg = UpdateTMTablesDialog()
-        self._dlg.LoadDefaultValues()
+            self._dlg = UpdateIMTablesDialog()
+        #self._dlg.LoadDefaultValues()
         return self._dlg
 
     def __init__(self):
@@ -118,9 +124,7 @@ class SetViewDate(object):
     def dlg(self):
         """Return the configuration dialog."""
         if self._dlg is None:
-            from IMDialogs import SetViewDate
-            self._dlg = SetViewDate()
-        self._dlg.LoadDefaultValues()
+            self._dlg = SetViewDateDialog()
         return self._dlg
 
     def __init__(self):
