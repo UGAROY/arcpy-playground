@@ -1,7 +1,7 @@
 import arcpy
 
-from tss import build_string_in_sql_expression
-from pythonaddins.addins.IntersectionManager.Install.src.config.schema import default_schemas
+from ..tss import build_string_in_sql_expression
+from ..config.schema import default_schemas
 
 
 

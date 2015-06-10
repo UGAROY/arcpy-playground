@@ -80,10 +80,10 @@ class PopulateIMTablesDialog(wx.Frame):
             processBar = ProgressBarDialog("Populate Intersection Manager Tables")
             processBar.UpdateContents(10,"Initializing task...")
 
-            from ..src.int1_populate_base_info_for_intersections import populate_intersections_info
-            from ..src.int2_generate_intersection_approach_records import populate_intersection_leg_info
-            from ..src.odot.ohio_dot_create import custom_create_odot
-            from ..src.util.meta import write_im_meta_data
+            from src.int1_populate_base_info_for_intersections import populate_intersections_info
+            from src.int2_generate_intersection_approach_records import populate_intersection_leg_info
+            from src.odot.ohio_dot_create import custom_create_odot
+            from src.util.meta import write_im_meta_data
 
             # Input
             parameters = get_default_parameters()

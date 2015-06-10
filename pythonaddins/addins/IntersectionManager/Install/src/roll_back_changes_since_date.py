@@ -5,7 +5,7 @@ import os
 
 import arcpy
 
-from pythonaddins.addins.IntersectionManager.Install.src.config.schema import default_schemas
+from config.schema import default_schemas
 from tss import format_sql_date
 from util.helper import get_default_parameters
 

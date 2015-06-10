@@ -2,11 +2,10 @@ from datetime import  datetime
 
 import arcpy
 
+from ohio_dot_util import calculate_latitude_longitude, calculate_county_jurisdiction_district, calculate_intersection_geometry
+from ..config.schema import default_schemas
 from ..tss import format_sql_date, build_string_in_sql_expression, delete_identical_only_keep_min_oid, delete_subset_data
 from ..util.helper import get_default_parameters
-from pythonaddins.addins.IntersectionManager.Install.src.odot.ohio_dot_util import calculate_latitude_longitude, calculate_county_jurisdiction_district, calculate_intersection_geometry
-from pythonaddins.addins.IntersectionManager.Install.src.config.schema import default_schemas
-
 
 default_parameters = get_default_parameters()
 

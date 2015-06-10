@@ -1,8 +1,8 @@
 import arcpy
 
-from pythonaddins.addins.IntersectionManager.Install.src.odot.ohio_dot_util import calculate_latitude_longitude, calculate_county_jurisdiction_district, calculate_intersection_geometry
-from tss import keep_fields_fms
-from pythonaddins.addins.IntersectionManager.Install.src.config.schema import default_schemas
+from ohio_dot_util import calculate_latitude_longitude, calculate_county_jurisdiction_district, calculate_intersection_geometry
+from ..tss import keep_fields_fms
+from ..config.schema import default_schemas
 
 
 def custom_create_odot(workspace):
