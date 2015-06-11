@@ -47,7 +47,7 @@ def calculate_leg_type_property(seg_value_dict, fc_key_name="function_class", aa
             else:
                 value_dict['Leg_Type'] = "Minor"
     else:
-        # no function_class or addt exist for the src
+        # no function_class or addt exist for the intersection
         for segment_id, value_dict in seg_value_dict.items():
             value_dict['Leg_Type'] = None
 
@@ -60,7 +60,7 @@ def populate_leg_id_by_intersection(input_data, intersection_id_field, segment_i
             if intersection_id not in inter__value_dict:
                 inter__value_dict[intersection_id] = {}
             inter__value_dict[intersection_id][segment_id] = sort_value
-    # sort the value_list for each src
+    # sort the value_list for each intersection
     for intersection_id in inter__value_dict.keys():
         sort_value_dict = inter__value_dict[intersection_id]
         inter__value_dict[intersection_id] = OrderedDict(sorted(sort_value_dict.items(), key=lambda x: x[1]))

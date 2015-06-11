@@ -11,7 +11,7 @@ segments_join_intersections = "segments_join_intersections"
 leg_type_points = "leg_type_points"
 leg_angle_points = "leg_angle_points"
 near_table = "near_table"
-leg_type_calculation_mileage = 0.0001  # Set a distance away from the src to avoid confusion
+leg_type_calculation_mileage = 0.0001  # Set a distance away from the intersection to avoid confusion
 function_class_join = "function_class_join"
 aadt_join = "aadt_join"
 
@@ -74,10 +74,10 @@ class IntersectionApproachEvent:
 
     def create_intersection_approach_event(self):
         arcpy.SpatialJoin_analysis(self.roadway_segment_event, self.intersection_event, segments_join_intersections, "JOIN_ONE_TO_MANY", "KEEP_COMMON", "#", "INTERSECT", self.search_radius, "#")
-        log_message("Finished joining roadway segment event to src event")
+        log_message("Finished joining roadway segment event to intersection event")
 
         self.populate_intersection_measure()
-        log_message("Finished populating the src measure")
+        log_message("Finished populating the intersection measure")
         self.populate_approach_id()
         log_message("Finished populating the approach id")
         self.populate_approach_ang_dir()
@@ -199,11 +199,11 @@ class IntersectionApproachEvent:
         self.build_inter__seg__value_dict(function_class_join, self.function_class_rid_field, self.function_class_field, inter__seg__leg_value_dict)
         self.build_inter__seg__value_dict(aadt_join, self.aadt_rid_field, self.aadt_field, inter__seg__leg_value_dict)
 
-        # calcuate the leg type for each src and segment
+        # calcuate the leg type for each intersection and segment
         for intersection_id, seg__value_dict in inter__seg__leg_value_dict.items():
             calculate_leg_type_property(seg__value_dict, self.function_class_field, self.aadt_field)
 
-        log_message("Finished building src leg type dictionary")
+        log_message("Finished building intersection leg type dictionary")
 
         # Assign the calculated leg type to table
         arcpy.AddField_management(segments_join_intersections, self.intersection_approach_leg_type_field, "TEXT", "", "", 10)
@@ -214,7 +214,7 @@ class IntersectionApproachEvent:
                     uRow[2] = inter__seg__leg_value_dict[intersection_id][segment_id]["Leg_Type"]
                 except KeyError:
                     if intersection_id in inter__seg__leg_value_dict and inter__seg__leg_value_dict[intersection_id]:
-                        # If there is at least one leg for the current src that has attributes
+                        # If there is at least one leg for the current intersection that has attributes
                         # Then all the other legs should be "Minor"
                         uRow[2] = "Minor"
                     else:

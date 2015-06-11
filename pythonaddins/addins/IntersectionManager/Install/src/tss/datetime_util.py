@@ -15,3 +15,7 @@ def format_sql_date(input_datetime, dbtype):
         # Update this if new database needs to be supported
         raise Exception("Unhandled DbType")
     return date_string
+
+def get_datetime_stamp():
+    import time
+    return time.strftime("%m%d%H%M%S")

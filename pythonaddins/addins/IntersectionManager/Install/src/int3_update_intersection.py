@@ -1140,7 +1140,7 @@ def update_intersection_route_event(workspace, input_date):
     with arcpy.da.SearchCursor(re_tba_previous_intersection_layer, intersection_id_field) as sCursor:
         re_tba_intersection_ids = [sRow[0] for sRow in sCursor]
     re_tba_intersection_where_clause = build_string_in_sql_expression(intersection_id_field, re_tba_intersection_ids)
-    # Select the corresponding src-related record in the existing and active intersection_route_event
+    # Select the corresponding intersection-related record in the existing and active intersection_route_event
     arcpy.MakeTableView_management(intersection_route_event, old_active_intersection_route_event_layer, old_active_string)
     with arcpy.da.UpdateCursor(old_active_intersection_route_event_layer,
                                [intersection_id_field, intersection_route_on_rid_field, intersection_route_on_measure_field, intersection_route_on_rname_field, intersection_route_at_rid_field, intersection_route_at_rname_field, to_date_field],
@@ -1176,7 +1176,7 @@ def update_intersection_route_event(workspace, input_date):
 
     # Delete Duplicated Records
     delete_identical_only_keep_min_oid(intersection_route_event, [intersection_id_field, intersection_route_on_rid_field, intersection_route_on_measure_field, intersection_route_on_rname_field, intersection_route_at_rid_field, intersection_route_at_rname_field])
-    # Recreate the active src route event
+    # Recreate the active intersection route event
     arcpy.MakeTableView_management(intersection_route_event, new_active_intersection_route_event_layer, active_string)
 
     """
@@ -1286,7 +1286,7 @@ def update_intersection_route_event(workspace, input_date):
     arcpy.MakeFeatureLayer_management(current_active_network_layer, ia_tba_current_network_layer)
     arcpy.SelectLayerByLocation_management(ia_tba_current_network_layer, "INTERSECT", ia_tba_current_intersection_layer, search_radius, "NEW_SELECTION")
 
-    # to be analyzed src route event, this is just used to get route measure value, so no need to make any sub selection
+    # to be analyzed intersection route event, this is just used to get route measure value, so no need to make any sub selection
     arcpy.MakeTableView_management(new_active_intersection_route_event_layer, ia_tba_current_intersection_route_event_layer)
 
     # to be analyzed roadway segments should includes segments intersecting with the above intersections

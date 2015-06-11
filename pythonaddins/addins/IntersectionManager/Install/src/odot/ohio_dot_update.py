@@ -64,7 +64,7 @@ def custom_update_odot(workspace, date):
     tba_update_intersection_where_clause = build_string_in_sql_expression(intersection_id_field, tba_update_intersection_ids)
     arcpy.MakeFeatureLayer_management(intersection_event, tba_update_intersection_event_layer, tba_update_intersection_where_clause)
 
-    # Add new src records to intersection_table
+    # Add new intersection records to intersection_table
     with arcpy.da.InsertCursor(intersection_table, intersection_id_field) as iCursor:
         for intersection_id in tba_new_intersection_ids:
             iCursor.insertRow((intersection_id,))

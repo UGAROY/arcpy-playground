@@ -1,6 +1,5 @@
 import os
 import wx
-import ConfigParser
 
 from datetime import datetime, timedelta
 from components.TableDialog import TableDialog
@@ -75,10 +74,10 @@ class UpdateIMTablesDialog(wx.Frame):
             # processBar = ProgressBarDialog("Update Intersection Manager Tables")
             # processBar.UpdateContents(10,"Initializing task...")
 
-            from ..src.int3_update_intersection import update_intersection_tables, check_intersection_tables_updates
-            from ..src.util.meta import read_im_meta_data, write_im_meta_data
-            from ..src.odot.ohio_dot_update import custom_update_odot
-            from ..src.roll_back_changes_since_date import roll_back
+            from src.int3_update_intersection import update_intersection_tables, check_intersection_tables_updates
+            from src.util.meta import read_im_meta_data, write_im_meta_data
+            from src.odot.ohio_dot_update import custom_update_odot
+            from src.roll_back_changes_since_date import roll_back
 
             # Input
             parameters = get_default_parameters()
@@ -99,7 +98,7 @@ class UpdateIMTablesDialog(wx.Frame):
                 last_update_date = create_date - timedelta(days=1)
 
             if check_intersection_tables_updates(workspace, last_update_date):
-                msg_dlg= wx.MessageDialog(None,"Changed have been made since %s. Do you want to update src tables?" % last_update_date,
+                msg_dlg= wx.MessageDialog(None,"Changed have been made since %s. Do you want to update intersection tables?" % last_update_date,
                                           "Update Intersections Info", wx.OK | wx.ICON_INFORMATION)
                 msg_dlg.ShowModal()
 

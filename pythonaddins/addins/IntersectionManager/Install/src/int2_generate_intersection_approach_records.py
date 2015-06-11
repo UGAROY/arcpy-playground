@@ -96,7 +96,7 @@ def populate_intersection_leg_info(workspace, create_date):
     arcpy.MakeFeatureLayer_management(aadt_event, "aadt_layer", query_filter)
     # -------------------------------------------------------------------------------------
 
-    log_message("Started populating src approach event")
+    log_message("Started populating intersection approach event")
 
     intersection_approach_event_instance = intersection_approach_event_mod.IntersectionApproachEvent(
         network="network_layer",

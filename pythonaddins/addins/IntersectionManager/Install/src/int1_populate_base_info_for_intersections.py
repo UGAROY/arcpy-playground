@@ -92,8 +92,8 @@ def populate_intersections_info(workspace, create_date):
         search_radius=search_radius)
     intersection_event = intersection_event_instance.create_intersection_event()
 
-    log_message("Finished creating the src event")
-    logger.info("Finished creating the src event")
+    log_message("Finished creating the intersection event")
+    logger.info("Finished creating the intersection event")
 
     intersection_route_event_instance = intersection_route_event_mod.IntersectionRouteEvent(
         network="network_layer",
@@ -112,8 +112,8 @@ def populate_intersections_info(workspace, create_date):
     )
     intersection_route_event = intersection_route_event_instance.create_intersection_route_event()
 
-    log_message("Finished creating the src route event")
-    logger.info("Finished creating the src route event")
+    log_message("Finished creating the intersection route event")
+    logger.info("Finished creating the intersection route event")
 
     roadway_segment_event_instance = roadway_segment_event_mod.RoadwaySegmentEvent(
         network="network_layer",

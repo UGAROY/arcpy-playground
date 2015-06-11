@@ -52,7 +52,7 @@ class IntersectionEvent:
                     xy_type_dict[xy] = "DELETE"  # Dangle points or loop skeleton, not real intersections, need to be deleted
                 elif length == 2:
                     if rid_list[0] == rid_list[1]:
-                        xy_type_dict[xy] = "CIRCULAR INTERSECTIONS"  # The loop src point
+                        xy_type_dict[xy] = "CIRCULAR INTERSECTIONS"  # The loop intersection point
                     else:
                         xy_type_dict[xy] = "TRUE INTERSECTIONS"
                 elif length >= 3:

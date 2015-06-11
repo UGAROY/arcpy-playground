@@ -8,6 +8,8 @@ from components.TextInputGroup import TextInputGroup
 from components.FileInputGroup import FileInputGroup
 from components.ComboBoxInputGroup import ComboBoxInputGroup
 
+import logging
+logger = logging.getLogger(__name__)
 
 Config = ConfigParser.ConfigParser()
 init_cfg = os.path.join(os.path.dirname(__file__), "src/config/params.ini")
@@ -141,6 +143,7 @@ class ConfigurationDialog(wx.Frame):
 
     def OnClose(self, event):
         """Close the frame. Do not use destroy."""
+        logger.info("ABC")
         self.Show(False)
 
     # End OnClose event method
@@ -152,6 +155,7 @@ class ConfigurationDialog(wx.Frame):
         # df = mxd.activeDataFrame
         # df.name = sTitle
         # arcpy.RefreshTOC()
+
         self.SaveConfigValues()
         self.Show(False)
 
