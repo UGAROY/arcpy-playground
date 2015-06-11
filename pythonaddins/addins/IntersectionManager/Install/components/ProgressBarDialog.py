@@ -3,7 +3,7 @@ import os
 
 class ProgressBarDialog(wx.Frame):
 
-    def __init__(self, inputLabel="Processing Task"):
+    def __init__(self, inputLabel="Intersection Manager"):
 
         wx.Frame.__init__(self, None, wx.ID_ANY, title=inputLabel, style=wx.DEFAULT_FRAME_STYLE | wx.STAY_ON_TOP)
         self.SetIcon(wx.Icon(os.path.join(os.path.dirname(__file__), "img", "Tlogo.ico"), wx.BITMAP_TYPE_ICO))
@@ -42,6 +42,11 @@ class ProgressBarDialog(wx.Frame):
         self.CenterOnParent()
         self.Show(True)
 
+        # create a pubsub receiver
+        # pub.subscribe(self.UpdateContents, "update_contents")
+        # pub.subscribe(self.UpdateProcessBar, "update_process_bar")
+        # pub.subscribe(self.UpdateNotification, "update_notification")
+
     # def OnOK(self, event):
     #     """ """
     #     self.Destroy()
@@ -49,23 +54,27 @@ class ProgressBarDialog(wx.Frame):
     def OnClose(self, event):
         """ """
         #TODO: dialog won't close in ArcMap. Figure out why.
-        event.Skip()
-        self.Destroy()
-        # self.Close()
+        # event.Skip()
+        # self.Destroy()
+
+        self.Show(False)
 
     # Issue: process bar will not refresh intermediately after calling SetValue(). Figure out why. Consider the
     #        tips before this issue got fixed.
     # Tips: when calling these functions, consider value as the percentage of completeness after the process of notification
     #       finished.
-    def UpdateProcessBar(self, value):
-        self.gauge.SetValue(value)
-        wx.Yield()
+    def UpdateProcessBar(self, progress):
+        self.gauge.SetValue(progress)
 
-    def UpdateNotification(self, value):
-        self.label.SetLabel(str(value))
+    def UpdateNotification(self, progress):
         wx.Yield()
+        self.label.SetLabel(progress)
 
-    def UpdateContents(self, value, notification):
-        self.gauge.SetValue(value)
-        self.label.SetLabel(str(notification))
+    def UpdateContents(self, progress, notification):
+        wx.Yield()
+        self.gauge.SetValue(progress)
+        self.gauge.Update()
+        self.label.SetLabel(notification)
+        self.label.Update()
+        self.Update()
         wx.Yield()

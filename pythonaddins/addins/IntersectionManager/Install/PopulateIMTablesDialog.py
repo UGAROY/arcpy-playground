@@ -3,12 +3,16 @@ import wx
 import wx.lib.scrolledpanel as scrolled
 
 from components.DateTimeInputGroup import DateTimeInputGroup
-from components.ProgressBarDialog import ProgressBarDialog
+from components.AgsProgressDialog import AgsProgressDialog
 
 import sys
 sys.path.append(os.path.dirname(__file__))
 
+from src.int1_populate_base_info_for_intersections import populate_intersections_info
+from src.int2_generate_intersection_approach_records import populate_intersection_leg_info
+from src.util.meta import write_im_meta_data
 from src.util.helper import get_default_parameters
+
 
 SECTION = "Default"
 
@@ -62,7 +66,7 @@ class PopulateIMTablesDialog(wx.Frame):
         self.CenterOnScreen()
 
         # # Uncomment line below when testing as a standalone application.
-        self.Show(True)
+        # self.Show(True)
 
     # End __init__ built-in
 
@@ -77,37 +81,35 @@ class PopulateIMTablesDialog(wx.Frame):
         try:
             self.Show(False)
 
-            processBar = ProgressBarDialog("Populate Intersection Manager Tables")
-            processBar.UpdateContents(10,"Initializing task...")
-
-            from src.int1_populate_base_info_for_intersections import populate_intersections_info
-            from src.int2_generate_intersection_approach_records import populate_intersection_leg_info
-            from src.odot.ohio_dot_create import custom_create_odot
-            from src.util.meta import write_im_meta_data
+            self.progress_bar = AgsProgressDialog("Populate Intersection Tables", "Progress")
 
             # Input
             parameters = get_default_parameters()
             workspace = parameters.get(SECTION, "workspace")
             create_date = self.dateTime.value
 
-
-            processBar.UpdateContents(40,"Populating Intersection Info...")
+            # Tasks
+            self.progress_bar.Update(10, "Populating Intersection Info...")
             populate_intersections_info(workspace, create_date)
 
-            processBar.UpdateContents(70,"Populating Intersection Leg Info...")
+            self.progress_bar.Update(40, "Populating Intersection Leg Info...")
             populate_intersection_leg_info(workspace, create_date)
 
-            processBar.UpdateContents(85,"ODOT Customization...")
-            custom_create_odot(workspace)
+            self.progress_bar.Update(70, "ODOT Customization...")
+            # custom_create_odot(workspace)
 
-            processBar.UpdateContents(100,"Updating meta file...")
+            self.progress_bar.Update(85,"Updating meta file...")
             write_im_meta_data(workspace, create_date)
 
-            processBar.UpdateNotification("Done!")
+            self.progress_bar.Update(100, "Populate intersection manager tables success!")
 
-            # return
-
-        except Exception as ex:
-            wx.MessageBox(ex.args[0], caption="Error", style=wx.OK | wx.ICON_ERROR)
+        except Exception, err:
+            # self.progress_bar.Update(100, err.args[0])
+            # wx.MessageBox(err.args[0], caption="Error", style=wx.OK | wx.ICON_ERROR)
+            self.progress_bar.Exit(err.args[0])
 
     # End OnOK event method
+
+# app = wx.App(False)
+# frame = PopulateIMTablesDialog()
+# app.MainLoop()
