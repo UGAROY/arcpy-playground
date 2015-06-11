@@ -206,7 +206,6 @@ def zoom_to_selected_features(layer_name, where_clause):
     """
     Look for a layer in TOC by name. Make a selection based on passing in where clause and zoom to selection features.
     """
-
     mxd = arcpy.mapping.MapDocument(r"CURRENT")
     df = mxd.activeDataFrame
     layers = arcpy.mapping.ListLayers(mxd,"",df)
