@@ -244,12 +244,12 @@ class TableGroup(wx.Panel):
         """
         row = event.GetRow()
         self.myGrid.SelectRow(row,False)
-        self.myGrid.Refresh()
+        self.myGrid.ForceRefresh()
 
         self.popupID1 = wx.NewId()
         self.menu = wx.Menu()
 
-        # Show how to put an icon in the menu
+        # put an item in the menu
         item = wx.MenuItem(self.menu, self.popupID1, "Zoom to Intersection")
         self.Bind(wx.EVT_MENU, self.OnPopupItemSelected, item)
         self.menu.AppendItem(item)
@@ -267,9 +267,7 @@ class TableGroup(wx.Panel):
         where_clause = "OBJECTID ="+oid
         self.ZoomToSelectedFeature(layer_name,where_clause)
 
-        # wx.MessageBox("You selected Row '%s'" % value)
-
-    def ZoomToSelectedFeature(self,event,layer_name, where_clause):
+    def ZoomToSelectedFeature(self,layer_name, where_clause):
         from tss_util import zoom_to_selected_features
         zoom_to_selected_features(layer_name, where_clause)
 
@@ -289,19 +287,12 @@ class TableDialog(wx.Dialog):
         wx.Dialog.__init__(self, None, wx.ID_ANY, title="Update Intersections Info",
                           style=wx.DEFAULT_FRAME_STYLE | wx.STAY_ON_TOP)
         self.SetIcon(wx.Icon(os.path.join(tss.get_parent_directory(__file__), "img", "Tlogo.ico"), wx.BITMAP_TYPE_ICO))
-        self.MinSize = 400, 300
+        self.MinSize = 450, 300
         self.MaxSize = 600, 600
         self.Bind(wx.EVT_CLOSE, self.OnClose)
 
         # Table Section
-        contentPanel = scrolled.ScrolledPanel(self, wx.ID_ANY, style=wx.SUNKEN_BORDER)
-        contentSizer = wx.BoxSizer(wx.VERTICAL)
-        self.table = TableGroup(contentPanel, data, rowNum, colNum, colName)
-        contentSizer.Add(self.table, 1, wx.EXPAND)
-        contentPanel.SetSizer(contentSizer)
-        contentPanel.SetupScrolling()
-        contentPanel.Fit()
-        # End of Table Section
+        self.table = TableGroup(self, data, rowNum, colNum, colName)
 
         # Button Toolbar
         btnPanel = wx.Panel(self, -1)
@@ -320,7 +311,7 @@ class TableDialog(wx.Dialog):
         # End of Button Toolbar
 
         mainSizer = wx.BoxSizer(wx.VERTICAL)
-        mainSizer.Add(contentPanel, 1, flag=wx.EXPAND)
+        mainSizer.Add(self.table, 1, flag=wx.EXPAND)
         mainSizer.Add(btnPanel, flag=wx.EXPAND)
         self.SetSizer(mainSizer)
         self.Fit()
@@ -819,8 +810,8 @@ class UpdateTMTablesDialog(wx.Frame):
         self.CenterOnScreen()
 
         # # Uncomment line below when testing as a standalone application.
-        self.LoadDefaultValues()
-        self.Show(True)
+        # self.LoadDefaultValues()
+        # self.Show(True)
 
     def LoadDefaultValues(self):
         """Load Configurations To Dialog"""
@@ -884,27 +875,12 @@ class UpdateTMTablesDialog(wx.Frame):
 
                     #---------------------------------------------------------------------------------------------------
                     custom_update_odot(workspace, today_date)
-                    write_im_meta_data(workspace, None, today_date)
+                    # write_im_meta_data(workspace, None, today_date)
             else:
                 msg_dlg= wx.MessageDialog(None,"No changed have been made since %s" % last_update_date,
                                           "Update Intersections Info", wx.OK | wx.ICON_INFORMATION)
                 msg_dlg.ShowModal()
                 msg_dlg.Destroy()
-
-            """ test section
-
-            # intersections = [["1","11",""],["2","22",""],["3","33",""],["4","44",""],["5","55",""],["6","66",""],["7","77",""],["8","88",""],["9","99",""],["10","1010",""],["11","1111",""],["12","1212",""]]
-            # row_num = len(intersections)
-            # col_num = len(intersections[0])
-            #
-            # table = TableDialog("Intersections",intersections,row_num,col_num,["Object ID","Current Intersection ID","New Intersection ID"])
-            # table.ShowModal()
-            #
-            # msg_dlg= wx.MessageDialog(None,"Done",
-            #                               "Update Intersection Tables", wx.OK | wx.ICON_INFORMATION)
-            # msg_dlg.ShowModal()
-
-            """
 
         except Exception, err:
             # self.progress_bar.Show(False)
@@ -1016,56 +992,12 @@ class SetViewDate(wx.Frame):
 
     # End OnOK event method
 
-# Threading section ----------------------------------------------------------------------------------------------------
-#TODO: Arcpy has some issue working on thread. May need to try other way to fix blocking GUI issue
-
-# class PopulateIMTablesTasks(Thread):
-#     def __init__(self,create_date):
-#         """Init Worker Thread Class."""
-#         Thread.__init__(self)
-#
-#         self.create_date = create_date
-#
-#         # start the thread
-#         self.start()
-#
-#     def run(self):
-#
-#         wx.CallAfter(pub.sendMessage, "update_contents", progress=0, notification="Initiating task...")
-#
-#         from int1_populate_base_info_for_intersections import populate_intersections_info
-#         from int2_generate_intersection_approach_records import populate_intersection_leg_info
-#         from ohio_dot_create import custom_create_odot
-#         from intersection_util import write_im_meta_data
-#
-#         # Input
-#         workspace = Config.get(SECTION, "workspace")
-#         create_date = self.create_date
-#
-#         # Tasks
-#         wx.CallAfter(pub.sendMessage, "update_contents",progress=10, notification="Populating Intersection Info...")
-#         populate_intersections_info(workspace, create_date)
-#
-#         wx.CallAfter(pub.sendMessage, "update_contents",progress=40, notification="Populating Intersection Leg Info...")
-#         populate_intersection_leg_info(workspace, create_date)
-#
-#         wx.CallAfter(pub.sendMessage, "update_contents",progress=70, notification="ODOT Customization...")
-#         custom_create_odot(workspace)
-#
-#         wx.CallAfter(pub.sendMessage, "update_contents",progress=85, notification="Updating meta file...")
-#         write_im_meta_data(workspace, create_date)
-#
-#         wx.CallAfter(pub.sendMessage, "update_contents", progress=100, notification="Populate intersection manager tables success!")
-
-#-----------------------------------------------------------------------------------------------------------------------
-
-
 
 # Uncomment code below to test as standalone application.
 # intersections = [["1","11",""],["2","22",""],["3","33",""],["4","44",""],["5","55",""],["6","66",""],["7","77",""],["8","88",""],["9","99",""],["10","1010",""],["11","1111",""],["12","1212",""]]
 # row_num = len(intersections)
 # col_num = len(intersections[0])
 
-app = wx.App(False)
-frame = UpdateTMTablesDialog()
-app.MainLoop()
+# app = wx.App(False)
+# frame = UpdateTMTablesDialog()
+# app.MainLoop()

@@ -16,10 +16,11 @@ def custom_update_odot(workspace, date):
     arcpy.env.workspace = workspace
     arcpy.env.overwriteOutput = True
 
-    parameters = default_parameters.get('default')
-    schemas = default_schemas.get("default")
+    client = "Default"
+    parameters = get_default_parameters()
+    schemas = default_schemas.get(client)
 
-    dbtype = parameters.get("dbtype")
+    dbtype = parameters.get(client,"dbtype")
 
     # Input and Configurations ----------------------------------------------------------
     intersection_event = schemas.get("intersection_event")
