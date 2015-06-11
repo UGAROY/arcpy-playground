@@ -244,12 +244,12 @@ class TableGroup(wx.Panel):
         """
         row = event.GetRow()
         self.myGrid.SelectRow(row,False)
-        self.myGrid.Refresh()
+        self.myGrid.ForceRefresh()
 
         self.popupID1 = wx.NewId()
         self.menu = wx.Menu()
 
-        # Show how to put an icon in the menu
+        # put an item in the menu
         item = wx.MenuItem(self.menu, self.popupID1, "Zoom to Intersection")
         self.Bind(wx.EVT_MENU, self.OnPopupItemSelected, item)
         self.menu.AppendItem(item)
@@ -269,7 +269,7 @@ class TableGroup(wx.Panel):
 
         # wx.MessageBox("You selected Row '%s'" % value)
 
-    def ZoomToSelectedFeature(self,event,layer_name, where_clause):
+    def ZoomToSelectedFeature(self,layer_name, where_clause):
         from tss_util import zoom_to_selected_features
         zoom_to_selected_features(layer_name, where_clause)
 
@@ -289,7 +289,7 @@ class TableDialog(wx.Dialog):
         wx.Dialog.__init__(self, None, wx.ID_ANY, title="Update Intersections Info",
                           style=wx.DEFAULT_FRAME_STYLE | wx.STAY_ON_TOP)
         self.SetIcon(wx.Icon(os.path.join(tss.get_parent_directory(__file__), "img", "Tlogo.ico"), wx.BITMAP_TYPE_ICO))
-        self.MinSize = 400, 300
+        self.MinSize = 400, 350
         self.MaxSize = 600, 600
         self.Bind(wx.EVT_CLOSE, self.OnClose)
 

@@ -679,32 +679,35 @@ def get_new_intersection_event(workspace,input_date):
     """
     Review new intersection events
     """
-    mxd = arcpy.mapping.MapDocument(r"CURRENT")
+    mxd = arcpy.mapping.MapDocument("CURRENT")
     df = mxd.activeDataFrame
 
     # generate intersection layers for review
     new_intersection_string = "%s > %s" % (from_date_field, last_update_date)
-    new_created_intersections = "in_memory\\new_created_intersections"
+    new_created_intersections = "new_created_intersections"
     arcpy.MakeFeatureLayer_management(intersection_event,new_created_intersections,new_intersection_string)
 
     retired_intersection_string = "({0} > {1}) AND ({0} <= CURRENT_TIMESTAMP)".format(to_date_field, last_update_date)
-    new_retired_intersections = "in_memory\\new_retired_intersections"
+    new_retired_intersections = "new_retired_intersections"
     arcpy.MakeFeatureLayer_management(intersection_event,new_retired_intersections,retired_intersection_string)
 
     # add layers to map document
     new_created_intersections_lyr = arcpy.mapping.Layer(new_created_intersections)
-    arcpy.mapping.AddLayer(df,new_created_intersections_lyr)
+    arcpy.mapping.AddLayer(df,new_created_intersections_lyr,"BOTTOM")
 
     new_retired_intersections_lyr = arcpy.mapping.Layer(new_retired_intersections)
-    arcpy.mapping.AddLayer(df,new_retired_intersections_lyr)
+    arcpy.mapping.AddLayer(df,new_retired_intersections_lyr,"BOTTOM")
 
     current_active_network_layer_lyr = arcpy.mapping.Layer(current_active_network_layer)
-    arcpy.mapping.AddLayer(df,current_active_network_layer_lyr)
+    arcpy.mapping.AddLayer(df,current_active_network_layer_lyr,"BOTTOM")
 
     previous_active_network_layer_lyr = arcpy.mapping.Layer(previous_active_network_layer)
-    arcpy.mapping.AddLayer(df,previous_active_network_layer_lyr)
+    arcpy.mapping.AddLayer(df,previous_active_network_layer_lyr,"BOTTOM")
 
-    del new_created_intersections_lyr,new_retired_intersections_lyr,current_active_network_layer_lyr,previous_active_network_layer_lyr
+    arcpy.RefreshActiveView()
+    arcpy.RefreshTOC()
+
+    # del new_created_intersections_lyr,new_retired_intersections_lyr,current_active_network_layer_lyr,previous_active_network_layer_lyr
 
     # User review new intersections -------------------------------------------------------------------------------
     intersections = []
