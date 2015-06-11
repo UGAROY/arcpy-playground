@@ -30,6 +30,7 @@ class IntersectionEvent:
         arcpy.env.outputMFlag = "Disabled"
 
         arcpy.SimplifyLine_cartography(self.network, simplify_network, "POINT_REMOVE", "999999 meters")
+
         arcpy.FeatureVerticesToPoints_management(simplify_network, self.intersection_event, "ALL")
         self.filter_out_none_intersections()
 
