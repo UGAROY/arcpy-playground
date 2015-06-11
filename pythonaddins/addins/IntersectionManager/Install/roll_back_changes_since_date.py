@@ -11,7 +11,7 @@ default_parameters = get_default_parameters()
 def roll_back(workspace, input_date):
 
     client = "Default"
-    parameters = default_parameters.get(client)
+    parameters = default_parameters
     schemas = default_schemas.get(client)
 
     dbtype = parameters.get(client, "dbtype")

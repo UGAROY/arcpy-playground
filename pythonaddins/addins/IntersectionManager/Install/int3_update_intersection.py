@@ -202,6 +202,11 @@ def check_intersection_event_updates(workspace, input_date):
     """
     Get All Differences Between Previous and Current Dataset
     """
+
+    # make a copy of network. Following operations will base on this copy.
+    copied_network = "copied_network"
+    arcpy.CopyFeatures_management(network,copied_network)
+
     # Create a previous active network layer. This is corresponding to the current state of all the intersection tables
     arcpy.MakeFeatureLayer_management(network, previous_active_network_layer, previous_active_network_string)
     # Create current network layer
@@ -400,6 +405,10 @@ def update_intersection_event(workspace, input_date):
     query_filter = "({0} is null or {0} <= {2}) and ({1} is null or {1} > {2})".format(aadt_from_date_field, aadt_to_date_field, query_date_string) if aadt_from_date_field and aadt_to_date_field else ""
     arcpy.MakeFeatureLayer_management(aadt_event, active_current_aadt_layer, query_filter)
     # -------------------------------------------------------------------------------------
+
+    # make a copy of network. Following operations will base on this copy.
+    copied_network = "copied_network"
+    arcpy.CopyFeatures_management(network,copied_network)
 
     # Create a previous active network layer. This is corresponding to the current state of all the intersection tables
     arcpy.MakeFeatureLayer_management(network, previous_active_network_layer, previous_active_network_string)
@@ -661,23 +670,17 @@ def get_new_intersection_event(workspace,input_date):
     arcpy.MakeFeatureLayer_management(aadt_event, active_current_aadt_layer, query_filter)
     # -------------------------------------------------------------------------------------
 
-    # Create a previous active network layer. This is corresponding to the current state of all the intersection tables
-    arcpy.MakeFeatureLayer_management(network, previous_active_network_layer, previous_active_network_string)
-    # Create current network layer
-    arcpy.MakeFeatureLayer_management(network, current_active_network_layer, current_active_network_string)
+    # make a copy of network. Following operations will base on this copy.
+    copied_network = "copied_network"
+    arcpy.CopyFeatures_management(network,copied_network)
 
-    #Created network at all states ----------------------------------------------------------------------------------------------
-    inserted_route_ids = list(set(created_route_ids) - set(retired_route_ids))
-    updated_route_ids = list(set(created_route_ids) & set(retired_route_ids))
-    deleted_route_ids = list(set(retired_route_ids) - set(created_route_ids))
-    arcpy.MakeFeatureLayer_management(current_active_network_layer, inserted_network_layer, build_string_in_sql_expression(network_route_id_field, inserted_route_ids))
-    arcpy.MakeFeatureLayer_management(current_active_network_layer, updated_after_network_layer, build_string_in_sql_expression(network_route_id_field, updated_route_ids))
-    arcpy.MakeFeatureLayer_management(previous_active_network_layer, updated_before_network_layer, build_string_in_sql_expression(network_route_id_field, updated_route_ids))
-    arcpy.MakeFeatureLayer_management(previous_active_network_layer, deleted_network_layer, build_string_in_sql_expression(network_route_id_field, deleted_route_ids))
-    #------------------------------------------------------------------------------------------------------------------------------
+    # Create a previous active network layer. This is corresponding to the current state of all the intersection tables
+    arcpy.MakeFeatureLayer_management(copied_network, previous_active_network_layer, previous_active_network_string)
+    # Create current network layer
+    arcpy.MakeFeatureLayer_management(copied_network, current_active_network_layer, current_active_network_string)
 
     """
-    Review new intersection events
+    Get new intersection events
     """
     mxd = arcpy.mapping.MapDocument("CURRENT")
     df = mxd.activeDataFrame
@@ -699,17 +702,21 @@ def get_new_intersection_event(workspace,input_date):
     arcpy.mapping.AddLayer(df,new_retired_intersections_lyr,"BOTTOM")
 
     current_active_network_layer_lyr = arcpy.mapping.Layer(current_active_network_layer)
+    # current_active_network_layer_lyr.definitionQuery = current_active_network_string
+    # current_active_network_layer_lyr.name = current_active_network_layer
     arcpy.mapping.AddLayer(df,current_active_network_layer_lyr,"BOTTOM")
 
     previous_active_network_layer_lyr = arcpy.mapping.Layer(previous_active_network_layer)
+    # previous_active_network_layer_lyr.definitionQuery = previous_active_network_string
+    # previous_active_network_layer_lyr.name = previous_active_network_layer
     arcpy.mapping.AddLayer(df,previous_active_network_layer_lyr,"BOTTOM")
 
     arcpy.RefreshActiveView()
     arcpy.RefreshTOC()
 
-    # del new_created_intersections_lyr,new_retired_intersections_lyr,current_active_network_layer_lyr,previous_active_network_layer_lyr
+    del new_created_intersections_lyr,new_retired_intersections_lyr,current_active_network_layer_lyr,previous_active_network_layer_lyr
 
-    # User review new intersections -------------------------------------------------------------------------------
+    # Get new intersections -------------------------------------------------------------------------------
     intersections = []
     with arcpy.da.UpdateCursor(new_created_intersections,["OBJECTID","Intersection_ID"]) as uCursor:
         for row in uCursor:
@@ -719,6 +726,8 @@ def get_new_intersection_event(workspace,input_date):
             tmp.append("")
             intersections.append(tmp)
     del uCursor
+
+    arcpy.DeleteFeatures_management(copied_network)
 
     return intersections
     #-------------------------------------------------------------------------------------------------------------------
@@ -879,29 +888,6 @@ def update_new_intersection_id(workspace,input_date, updated_intersections):
     created_retired_function_class_exist = False
     created_retired_aadt_exist = False
     #-----------------------------------------------
-
-    # Data preprocessing-----------------------------------------------------------------
-    query_date_string = "CURRENT_TIMESTAMP"
-    query_filter = "({0} is null or {0} <= {2}) and ({1} is null or {1} > {2})".format(function_class_from_date_field, function_class_to_date_field, query_date_string) if function_class_from_date_field and function_class_to_date_field else ""
-    arcpy.MakeFeatureLayer_management(function_class_event, active_current_function_class_layer, query_filter)
-    query_filter = "({0} is null or {0} <= {2}) and ({1} is null or {1} > {2})".format(aadt_from_date_field, aadt_to_date_field, query_date_string) if aadt_from_date_field and aadt_to_date_field else ""
-    arcpy.MakeFeatureLayer_management(aadt_event, active_current_aadt_layer, query_filter)
-    # -------------------------------------------------------------------------------------
-
-    # Create a previous active network layer. This is corresponding to the current state of all the intersection tables
-    arcpy.MakeFeatureLayer_management(network, previous_active_network_layer, previous_active_network_string)
-    # Create current network layer
-    arcpy.MakeFeatureLayer_management(network, current_active_network_layer, current_active_network_string)
-
-    #Created network at all states ----------------------------------------------------------------------------------------------
-    inserted_route_ids = list(set(created_route_ids) - set(retired_route_ids))
-    updated_route_ids = list(set(created_route_ids) & set(retired_route_ids))
-    deleted_route_ids = list(set(retired_route_ids) - set(created_route_ids))
-    arcpy.MakeFeatureLayer_management(current_active_network_layer, inserted_network_layer, build_string_in_sql_expression(network_route_id_field, inserted_route_ids))
-    arcpy.MakeFeatureLayer_management(current_active_network_layer, updated_after_network_layer, build_string_in_sql_expression(network_route_id_field, updated_route_ids))
-    arcpy.MakeFeatureLayer_management(previous_active_network_layer, updated_before_network_layer, build_string_in_sql_expression(network_route_id_field, updated_route_ids))
-    arcpy.MakeFeatureLayer_management(previous_active_network_layer, deleted_network_layer, build_string_in_sql_expression(network_route_id_field, deleted_route_ids))
-    #------------------------------------------------------------------------------------------------------------------------------
 
     """
     Update new intersection events
