@@ -3,12 +3,10 @@ import logging.config
 import logging.handlers
 import os
 from ags.AgsLogHandler import AgsLogHandler
-from datetime_util import get_datetime_stamp
 from path_util import get_user_directory
 from helper import first_or_default
 
-
-def setup_logger(folder_name):
+def setup_logger(folder_name, output_dir=""):
     """
     Setup the logger.
     The function will try to find the best location to put the folder/log
@@ -16,12 +14,12 @@ def setup_logger(folder_name):
     @param folder_name: The folder name that will hold all the log files
     @return:
     """
-    time_stamp = get_datetime_stamp()
 
-    path_candiates = [os.path.join(get_user_directory(), ".%s" % folder_name),
-                     os.path.join(os.path.dirname(__file__), ".%s" % folder_name)]
+    path_candiates = [output_dir,
+                      os.path.join(get_user_directory(), ".%s" % folder_name),
+                      os.path.join(os.path.dirname(__file__), ".%s" % folder_name)]
     output_path = first_or_default(path_candiates, create_output_folder, "")
-    log_path = os.path.join(output_path, ".%s.log" % time_stamp)
+    log_path = os.path.join(output_path, "tss.log")
 
     logging.handlers.AgsHandler = AgsLogHandler
 
