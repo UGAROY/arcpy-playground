@@ -25,7 +25,7 @@ class IntersectionManagerExt(object):
 
             # setup logger
             from src.tss import setup_logger
-            setup_logger()
+            setup_logger('IntersectionManager')
 
         except Exception:
             pythonaddins.MessageBox("Error starting the Intersection Manager Extension", "Extension Error", 0)

@@ -14,3 +14,11 @@ def get_parent_directory(path, level=1):
         parent_path = os.path.dirname(parent_path)
         level -= 1
     return parent_path
+
+
+def get_user_directory():
+    """
+    @return: the home directory
+    """
+    from os.path import expanduser
+    return expanduser("~")

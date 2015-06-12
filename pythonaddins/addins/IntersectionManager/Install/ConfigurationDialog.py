@@ -22,7 +22,6 @@ def readConfigFile():
     else:
         Config.read(init_cfg)
 
-
 class ConfigurationDialog(wx.Frame):
     def __init__(self):
         """Initialize the Frame and add wx widgets."""
@@ -176,3 +175,11 @@ class ConfigurationDialog(wx.Frame):
             Config.set(SECTION, input.key, input.value)
         with open(updated_cfg, "wb") as cfg:
             Config.write(cfg)
+
+# # setup logger
+# from src.tss import setup_logger
+# setup_logger('IntersectionManager')
+#
+# app = wx.App(False)
+# frame = ConfigurationDialog()
+# app.MainLoop()
