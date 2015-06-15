@@ -1,5 +1,6 @@
 from path_util import get_parent_directory, get_user_directory
 from log_util import setup_logger
+from core_util import extract_number_from_string
 from helper import first_or_default
 from datetime_util import format_sql_date, truncate_datetime, get_datetime_stamp
 

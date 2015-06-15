@@ -2,8 +2,8 @@ from datetime import datetime
 
 import arcpy
 
-from tss import format_sql_date
-from util.helper import log_message, get_default_parameters
+from tss import format_sql_date, extract_number_from_string
+from util.helper import get_default_parameters
 from config.schema import default_schemas
 from util.meta import write_im_meta_data
 import intersection_approach_event as intersection_approach_event_mod
@@ -81,9 +81,9 @@ def populate_intersection_leg_info(workspace, create_date):
 
     # configuration ----------------------------------------------------------------------
     search_radius = parameters.get(client, "search_radius")
-    measure_scale = parameters.get(client, "measure_scale")
-    angle_calculation_distance = float(parameters.get(client, "angle_calculation_distance")) / 5280
-    area_of_influence = float(parameters.get(client, "area_of_influence")) / 5280
+    measure_scale = int(parameters.get(client, "measure_scale"))
+    angle_calculation_distance = extract_number_from_string(parameters.get(client, "angle_calculation_distance"))[0] / 5280
+    area_of_influence = extract_number_from_string(parameters.get(client, "area_of_influence"))[0] / 5280
     azumith_zero_direction = parameters.get(client, "azumith_zero_direction")
     # ------------------------------------------------------------------------------------
 
@@ -96,7 +96,7 @@ def populate_intersection_leg_info(workspace, create_date):
     arcpy.MakeFeatureLayer_management(aadt_event, "aadt_layer", query_filter)
     # -------------------------------------------------------------------------------------
 
-    log_message("Started populating intersection approach event")
+    logger.info("Started populating intersection approach event")
 
     intersection_approach_event_instance = intersection_approach_event_mod.IntersectionApproachEvent(
         network="network_layer",
