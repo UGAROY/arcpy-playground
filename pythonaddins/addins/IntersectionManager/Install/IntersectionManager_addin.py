@@ -107,7 +107,7 @@ class UpdateIMTables(object):
         """Return the configuration dialog."""
         if self._dlg is None:
             self._dlg = UpdateIMTablesDialog()
-        #self._dlg.LoadDefaultValues()
+        # self._dlg.LoadDefaultValues()
         return self._dlg
 
     def __init__(self):

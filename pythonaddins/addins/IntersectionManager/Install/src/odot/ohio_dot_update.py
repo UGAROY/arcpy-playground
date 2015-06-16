@@ -89,4 +89,5 @@ def custom_update_odot(workspace, date):
 if __name__ == "__main__":
     workspace = r'C:\Projects\ODOT\Data\Raw.gdb'
     date = datetime.now()
-    custom_update_odot(workspace, date)
+    print("Done")
+    # custom_update_odot(workspace, date)

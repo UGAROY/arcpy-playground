@@ -26,3 +26,25 @@ def zoom_to_selected_features(layer_name, where_clause):
     arcpy.RefreshTOC()
 
     return
+
+def clear_table_of_content(workspace):
+    """
+    Clean current map document
+    """
+    arcpy.env.workspace = workspace
+
+    mxd = arcpy.mapping.MapDocument(r"CURRENT")
+    df = mxd.activeDataFrame
+    layers = arcpy.mapping.ListLayers(mxd,"",df)
+
+    for lyr in layers:
+        arcpy.mapping.RemoveLayer(df, lyr)
+
+    # Delete copied network
+    copied_network = "copied_network"
+    arcpy.Delete_management(copied_network)
+
+    arcpy.RefreshActiveView()
+    arcpy.RefreshTOC()
+
+    return
