@@ -42,7 +42,9 @@ def clear_table_of_content(workspace):
 
     # Delete copied network
     copied_network = "copied_network"
-    arcpy.Delete_management(copied_network)
+
+    if arcpy.Exists(copied_network):
+        arcpy.Delete_management(copied_network)
 
     arcpy.RefreshActiveView()
     arcpy.RefreshTOC()

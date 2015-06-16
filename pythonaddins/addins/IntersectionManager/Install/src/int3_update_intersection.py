@@ -1,18 +1,17 @@
 from datetime import timedelta
 import time
-
 import arcpy
-
-import wx
-
-from tss import format_sql_date, get_maximum_id, subset_data_exist, build_string_in_sql_expression, delete_identical_only_keep_min_oid
+from tss import format_sql_date, get_maximum_id, subset_data_exist, build_string_in_sql_expression, \
+    delete_identical_only_keep_min_oid,extract_number_from_string
 from util.helper import get_default_parameters
-
 from config.schema import default_schemas
 import intersection_event as intersection_event_mod
 import intersection_route_event as intersection_route_event_mod
 import roadway_segment_event as roadway_segment_event_mod
 import intersection_approach_event as intersection_approach_event_mod
+
+import logging
+logger = logging.getLogger(__name__)
 
 
 """ Some terminologies
@@ -107,11 +106,11 @@ def check_intersection_event_updates(workspace, input_date):
     # -----------------------------------------------------------------------------------------------
 
     # Configuration ---------------------------------------------------------------------------------
-    search_radius = parameters.get(client,"search_radius")
-    measure_scale = parameters.get(client,"measure_scale")
-    angle_calculation_distance = float(parameters.get(client,"angle_calculation_distance")) / 5280
-    area_of_influence = float(parameters.get(client,"area_of_influence")) / 5280
-    azumith_zero_direction = parameters.get(client,"azumith_zero_direction")
+    search_radius = parameters.get(client, "search_radius")
+    measure_scale = int(parameters.get(client, "measure_scale"))
+    angle_calculation_distance = extract_number_from_string(parameters.get(client, "angle_calculation_distance"))[0] / 5280
+    area_of_influence = extract_number_from_string(parameters.get(client, "area_of_influence"))[0] / 5280
+    azumith_zero_direction = parameters.get(client, "azumith_zero_direction")
     #-----------------------------------------------------------------------------------------------
 
     # intermediate data ----------------------------
@@ -207,6 +206,8 @@ def check_intersection_event_updates(workspace, input_date):
     Get All Differences Between Previous and Current Dataset
     """
 
+    logger.info("Start checking change/update")
+
     # make a copy of network. Following operations will base on this copy.
     copied_network = "copied_network"
     arcpy.CopyFeatures_management(network,copied_network)
@@ -238,6 +239,7 @@ def check_intersection_event_updates(workspace, input_date):
             created_retired_aadt_exist = True
 
     if len(created_route_ids) == 0 and len(retired_route_ids) == 0 and not created_retired_function_class_exist and not created_retired_aadt_exist:
+        logger.warning("No change/update has been made since %s" % last_update_date)
         # arcpy.AddError("No changed have been made since %s" % last_update_date)
         return False
     else:
@@ -314,11 +316,11 @@ def update_intersection_event(workspace, input_date):
     # -----------------------------------------------------------------------------------------------
 
     # Configuration ---------------------------------------------------------------------------------
-    search_radius = parameters.get(client,"search_radius")
-    measure_scale = parameters.get(client,"measure_scale")
-    angle_calculation_distance = float(parameters.get(client,"angle_calculation_distance")) / 5280
-    area_of_influence = float(parameters.get(client,"area_of_influence")) / 5280
-    azumith_zero_direction = parameters.get(client,"azumith_zero_direction")
+    search_radius = parameters.get(client, "search_radius")
+    measure_scale = int(parameters.get(client, "measure_scale"))
+    angle_calculation_distance = extract_number_from_string(parameters.get(client, "angle_calculation_distance"))[0] / 5280
+    area_of_influence = extract_number_from_string(parameters.get(client, "area_of_influence"))[0] / 5280
+    azumith_zero_direction = parameters.get(client, "azumith_zero_direction")
     #-----------------------------------------------------------------------------------------------
 
     # intermediate data ----------------------------
@@ -432,6 +434,8 @@ def update_intersection_event(workspace, input_date):
     """
     Update Intersection_Event
     """
+    logger.info("Start updating intersection event")
+
     # The tba_current_network should include 1) inserted routes 2) updated after routes 3) routes intersecting inserted routes
     # 4) routes intersecting updated after routes 5) routes intersecting deleted routes
     arcpy.MakeFeatureLayer_management(current_active_network_layer, tba_current_network_layer)
@@ -579,11 +583,11 @@ def get_new_intersection_event(workspace,input_date):
     # -----------------------------------------------------------------------------------------------
 
     # Configuration ---------------------------------------------------------------------------------
-    search_radius = parameters.get(client,"search_radius")
-    measure_scale = parameters.get(client,"measure_scale")
-    angle_calculation_distance = float(parameters.get(client,"angle_calculation_distance")) / 5280
-    area_of_influence = float(parameters.get(client,"area_of_influence")) / 5280
-    azumith_zero_direction = parameters.get(client,"azumith_zero_direction")
+    search_radius = parameters.get(client, "search_radius")
+    measure_scale = int(parameters.get(client, "measure_scale"))
+    angle_calculation_distance = extract_number_from_string(parameters.get(client, "angle_calculation_distance"))[0] / 5280
+    area_of_influence = extract_number_from_string(parameters.get(client, "area_of_influence"))[0] / 5280
+    azumith_zero_direction = parameters.get(client, "azumith_zero_direction")
     #-----------------------------------------------------------------------------------------------
 
     # intermediate data ----------------------------
@@ -687,6 +691,8 @@ def get_new_intersection_event(workspace,input_date):
     """
     Get new intersection events
     """
+    logger.info("Get new intersection events for user review")
+
     mxd = arcpy.mapping.MapDocument("CURRENT")
     df = mxd.activeDataFrame
 
@@ -801,11 +807,11 @@ def update_new_intersection_id(workspace,input_date, updated_intersections):
     # -----------------------------------------------------------------------------------------------
 
     # Configuration ---------------------------------------------------------------------------------
-    search_radius = parameters.get(client,"search_radius")
-    measure_scale = parameters.get(client,"measure_scale")
-    angle_calculation_distance = float(parameters.get(client,"angle_calculation_distance")) / 5280
-    area_of_influence = float(parameters.get(client,"area_of_influence")) / 5280
-    azumith_zero_direction = parameters.get(client,"azumith_zero_direction")
+    search_radius = parameters.get(client, "search_radius")
+    measure_scale = int(parameters.get(client, "measure_scale"))
+    angle_calculation_distance = extract_number_from_string(parameters.get(client, "angle_calculation_distance"))[0] / 5280
+    area_of_influence = extract_number_from_string(parameters.get(client, "area_of_influence"))[0] / 5280
+    azumith_zero_direction = parameters.get(client, "azumith_zero_direction")
     #-----------------------------------------------------------------------------------------------
 
     # intermediate data ----------------------------
@@ -890,8 +896,10 @@ def update_new_intersection_id(workspace,input_date, updated_intersections):
     #-----------------------------------------------
 
     """
-    Update new intersection events
+    Apply user assigned new intersection ids
     """
+
+    logger.info("Apply user assigned new intersection ids")
 
     keys = updated_intersections.keys()
     where_clause = "OBJECTID IN ("+",".join(keys)+")"
@@ -975,11 +983,11 @@ def update_intersection_route_event(workspace, input_date):
     # -----------------------------------------------------------------------------------------------
 
     # Configuration ---------------------------------------------------------------------------------
-    search_radius = parameters.get(client,"search_radius")
-    measure_scale = parameters.get(client,"measure_scale")
-    angle_calculation_distance = float(parameters.get(client,"angle_calculation_distance")) / 5280
-    area_of_influence = float(parameters.get(client,"area_of_influence")) / 5280
-    azumith_zero_direction = parameters.get(client,"azumith_zero_direction")
+    search_radius = parameters.get(client, "search_radius")
+    measure_scale = int(parameters.get(client, "measure_scale"))
+    angle_calculation_distance = extract_number_from_string(parameters.get(client, "angle_calculation_distance"))[0] / 5280
+    area_of_influence = extract_number_from_string(parameters.get(client, "area_of_influence"))[0] / 5280
+    azumith_zero_direction = parameters.get(client, "azumith_zero_direction")
     #-----------------------------------------------------------------------------------------------
 
     # intermediate data ----------------------------
@@ -1093,6 +1101,8 @@ def update_intersection_route_event(workspace, input_date):
     """
     Update Intersection_Route_Event
     """
+    logger.info("Start updating intersection route event")
+
     # Recreate the active intersections
     arcpy.MakeFeatureLayer_management(intersection_event, new_active_intersection_layer, active_string)
     # Keep a copy of old active intersections
@@ -1256,11 +1266,11 @@ def update_roadway_segment_event(workspace, input_date):
     # -----------------------------------------------------------------------------------------------
 
     # Configuration ---------------------------------------------------------------------------------
-    search_radius = parameters.get(client,"search_radius")
-    measure_scale = parameters.get(client,"measure_scale")
-    angle_calculation_distance = float(parameters.get(client,"angle_calculation_distance")) / 5280
-    area_of_influence = float(parameters.get(client,"area_of_influence")) / 5280
-    azumith_zero_direction = parameters.get(client,"azumith_zero_direction")
+    search_radius = parameters.get(client, "search_radius")
+    measure_scale = int(parameters.get(client, "measure_scale"))
+    angle_calculation_distance = extract_number_from_string(parameters.get(client, "angle_calculation_distance"))[0] / 5280
+    area_of_influence = extract_number_from_string(parameters.get(client, "area_of_influence"))[0] / 5280
+    azumith_zero_direction = parameters.get(client, "azumith_zero_direction")
     #-----------------------------------------------------------------------------------------------
 
     # intermediate data ----------------------------
@@ -1374,6 +1384,8 @@ def update_roadway_segment_event(workspace, input_date):
     """
     Update Roadway_Segment_Event
     """
+    logger.info("Start updating roadway segment event")
+
     # to be analyze current network should include 1) inserted routes 2) updated after routes
     # 3) routes intersecting the real_new_intersections 4) routes intersecting real_old_intersections
     arcpy.MakeFeatureLayer_management(current_active_network_layer, rs_tba_current_network_layer)
@@ -1526,11 +1538,11 @@ def update_intersection_approach_event(workspace, input_date):
     # -----------------------------------------------------------------------------------------------
 
     # Configuration ---------------------------------------------------------------------------------
-    search_radius = parameters.get(client,"search_radius")
-    measure_scale = parameters.get(client,"measure_scale")
-    angle_calculation_distance = float(parameters.get(client,"angle_calculation_distance")) / 5280
-    area_of_influence = float(parameters.get(client,"area_of_influence")) / 5280
-    azumith_zero_direction = parameters.get(client,"azumith_zero_direction")
+    search_radius = parameters.get(client, "search_radius")
+    measure_scale = int(parameters.get(client, "measure_scale"))
+    angle_calculation_distance = extract_number_from_string(parameters.get(client, "angle_calculation_distance"))[0] / 5280
+    area_of_influence = extract_number_from_string(parameters.get(client, "area_of_influence"))[0] / 5280
+    azumith_zero_direction = parameters.get(client, "azumith_zero_direction")
     #-----------------------------------------------------------------------------------------------
 
     # intermediate data ----------------------------
@@ -1644,6 +1656,8 @@ def update_intersection_approach_event(workspace, input_date):
     """
     Update Intersection_Approach_Event
     """
+    logger.info("Start updating intersection approach event")
+
     # One special thing here is the attribute changes can also affect the result
     if created_retired_function_class_exist:
         arcpy.MakeFeatureLayer_management(function_class_event, created_retired_function_class_layer, "%s or %s" % (function_class_created_since_date_string, function_class_retired_since_date_string))

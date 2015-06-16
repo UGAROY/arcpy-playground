@@ -17,7 +17,8 @@ from src.util.map import clear_table_of_content
 from src.odot.ohio_dot_update import custom_update_odot
 from src.roll_back_changes_since_date import roll_back
 
-from tss_util import log_message
+import logging
+logger = logging.getLogger(__name__)
 
 SECTION = "Default"
 Config = get_default_parameters()
@@ -102,7 +103,7 @@ class UpdateIMTablesDialog(wx.Frame):
                 roll_back(workspace, last_update_date)
                 last_update_date = last_update_date - timedelta(days=1)
             elif last_update_date is None:
-                last_update_date = create_date - timedelta(days=1)
+                last_update_date = create_date
 
             if check_intersection_event_updates(workspace, last_update_date):
                 msg_dlg= wx.MessageDialog(None,"Changes have been made since %s. Do you want to update intersection tables?" % last_update_date,
@@ -120,8 +121,6 @@ class UpdateIMTablesDialog(wx.Frame):
 
                         updated_intersections = self.table.updated_data
 
-                        # clear_table_of_content(workspace)
-
                         if updated_intersections:
                             update_new_intersection_id(workspace,last_update_date,updated_intersections)
                     #---------------------------------------------------------------------------------------------------
@@ -131,7 +130,7 @@ class UpdateIMTablesDialog(wx.Frame):
                     update_intersection_approach_event(workspace,last_update_date)
 
                     custom_update_odot(workspace, today_date)
-                    # write_im_meta_data(workspace, None, today_date)
+                    write_im_meta_data(workspace, None, today_date)
 
                     clear_table_of_content(workspace)
 
@@ -147,7 +146,7 @@ class UpdateIMTablesDialog(wx.Frame):
                 msg_dlg.Destroy()
 
         except Exception, err:
-            log_message(traceback.format_exc())
+            logger.warning(traceback.format_exc())
             wx.MessageBox(err.args[0], caption="Error", style=wx.OK | wx.ICON_ERROR)
 
 
