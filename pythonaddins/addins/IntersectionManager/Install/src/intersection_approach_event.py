@@ -2,7 +2,6 @@ import arcpy
 
 from tss import geodesic_angle_to_circular_angle, geodesic_angle_to_direction
 from util.leg import calculate_leg_type_property, populate_leg_id_by_intersection
-from util.helper import log_message
 from tss import transform_dataset_keep_fields, alter_field_name
 
 
@@ -22,6 +21,9 @@ leg_angle_measure_field = "Leg_Angle_Measure"
 
 # Scale of the approach angle, TODO: verify if we want to make it configurable
 angle_scale = 3
+
+import logging
+logger = logging.getLogger(__name__)
 
 
 class IntersectionApproachEvent:
@@ -74,20 +76,20 @@ class IntersectionApproachEvent:
 
     def create_intersection_approach_event(self):
         arcpy.SpatialJoin_analysis(self.roadway_segment_event, self.intersection_event, segments_join_intersections, "JOIN_ONE_TO_MANY", "KEEP_COMMON", "#", "INTERSECT", self.search_radius, "#")
-        log_message("Finished joining roadway segment event to intersection event")
+        logger.info("Finished joining roadway segment event to intersection event")
 
         self.populate_intersection_measure()
-        log_message("Finished populating the intersection measure")
+        logger.info("Finished populating the intersection measure")
         self.populate_approach_id()
-        log_message("Finished populating the approach id")
+        logger.info("Finished populating the approach id")
         self.populate_approach_ang_dir()
-        log_message("Finished populating the approach angle and direction")
+        logger.info("Finished populating the approach angle and direction")
         self.populate_beg_end_inf()
-        log_message("Finished populating the begin and end influence area")
+        logger.info("Finished populating the begin and end influence area")
         self.populate_leg_id()
-        log_message("Finished populating the leg id")
+        logger.info("Finished populating the leg id")
         self.populate_leg_type()
-        log_message("Finished populating the leg type")
+        logger.info("Finished populating the leg type")
         self.adjust_output_schema()
         self.clear_intermediate_date()
 
@@ -187,12 +189,12 @@ class IntersectionApproachEvent:
         arcpy.MakeRouteEventLayer_lr(self.network, self.network_route_id_field, segments_join_intersections, "%s POINT %s" % (self.roadway_segment_rid_field, leg_type_measure_field), "leg_type_point_layer")
         arcpy.CopyFeatures_management("leg_type_point_layer", leg_type_points)
 
-        log_message("Finished creating leg type points")
+        logger.info("Finished creating leg type points")
 
         self.join_event_fields_to_leg_type_points(self.function_class_layer, self.function_class_rid_field, [self.function_class_field], function_class_join)
         self.join_event_fields_to_leg_type_points(self.aadt_layer, self.aadt_rid_field, [self.aadt_field], aadt_join)
 
-        log_message("Finished joining the function class and addt values to leg type points")
+        logger.info("Finished joining the function class and addt values to leg type points")
 
         # Build the intersection__seg__value_dict
         inter__seg__leg_value_dict = {}
@@ -203,7 +205,7 @@ class IntersectionApproachEvent:
         for intersection_id, seg__value_dict in inter__seg__leg_value_dict.items():
             calculate_leg_type_property(seg__value_dict, self.function_class_field, self.aadt_field)
 
-        log_message("Finished building intersection leg type dictionary")
+        logger.info("Finished building intersection leg type dictionary")
 
         # Assign the calculated leg type to table
         arcpy.AddField_management(segments_join_intersections, self.intersection_approach_leg_type_field, "TEXT", "", "", 10)

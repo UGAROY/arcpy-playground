@@ -2,7 +2,7 @@ from datetime import datetime
 import arcpy
 
 from tss import format_sql_date
-from util.helper import get_default_parameters, log_message
+from util.helper import get_default_parameters
 from config.schema import default_schemas
 
 import intersection_event as intersection_event_mod
@@ -92,7 +92,6 @@ def populate_intersections_info(workspace, create_date):
         search_radius=search_radius)
     intersection_event = intersection_event_instance.create_intersection_event()
 
-    log_message("Finished creating the intersection event")
     logger.info("Finished creating the intersection event")
 
     intersection_route_event_instance = intersection_route_event_mod.IntersectionRouteEvent(
@@ -112,7 +111,6 @@ def populate_intersections_info(workspace, create_date):
     )
     intersection_route_event = intersection_route_event_instance.create_intersection_route_event()
 
-    log_message("Finished creating the intersection route event")
     logger.info("Finished creating the intersection route event")
 
     roadway_segment_event_instance = roadway_segment_event_mod.RoadwaySegmentEvent(
@@ -129,7 +127,6 @@ def populate_intersections_info(workspace, create_date):
     )
     roadway_segment_event = roadway_segment_event_instance.create_roadway_segment_event()
 
-    log_message("Finished creating roadway segment event")
     logger.info("Finished creating roadway segment event")
 
     # Populate date field
