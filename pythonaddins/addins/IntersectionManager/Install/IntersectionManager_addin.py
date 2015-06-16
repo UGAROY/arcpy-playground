@@ -9,6 +9,11 @@ from ConfigurationDialog import ConfigurationDialog
 from SetViewDateDialog import SetViewDateDialog
 from UpdateIMTablesDialog import UpdateIMTablesDialog
 
+from src.util.helper import toolDialog
+
+local_path = os.path.dirname(__file__)
+
+im_toolbox =  os.path.join(local_path, "im.tbx")
 
 class IntersectionManagerExt(object):
     """Implementation for IntersectionManager_addin.extension (Extension)"""
@@ -52,16 +57,6 @@ class IntersectionManagerExt(object):
 class Configuration(object):
     """Implementation for IntersectionManager_addin.button (Button)"""
 
-    _dlg = None
-
-    @property
-    def dlg(self):
-        """Return the configuration dialog."""
-        if self._dlg is None:
-            self._dlg = ConfigurationDialog()
-        self._dlg.LoadDefaultValues()
-        return self._dlg
-
     def __init__(self):
         """Initialize button and set it to enabled and unchecked by default."""
         self.enabled = True
@@ -70,22 +65,12 @@ class Configuration(object):
     def onClick(self):
         """Show the rename configuration dialog."""
         try:
-            self.dlg.Show(True)
+            toolDialog(im_toolbox,"configuration")
         except Exception as e:
             pythonaddins.MessageBox("Can't Show Parameter Configuration Dialog. %s" % e, "Error", "0")
 
 class PopulateIMTables(object):
     """Implementation for IntersectionManager_addin.button (Button)"""
-
-    _dlg = None
-
-    @property
-    def dlg(self):
-        """Return the configuration dialog."""
-        if self._dlg is None:
-            self._dlg = PopulateIMTablesDialog()
-        #self._dlg.LoadDefaultValues()
-        return self._dlg
 
     def __init__(self):
         self.enabled = True
@@ -93,7 +78,7 @@ class PopulateIMTables(object):
 
     def onClick(self):
         try:
-            self.dlg.Show(True)
+            toolDialog(im_toolbox,"populate")
         except Exception as e:
             pythonaddins.MessageBox("Can't Show Populate Intersections Manager Table Dialog. %s" % e, "Error", "0")
 
@@ -123,21 +108,12 @@ class UpdateIMTables(object):
 class SetViewDate(object):
     """Implementation for IntersectionManager_addin.button (Button)"""
 
-    _dlg = None
-
-    @property
-    def dlg(self):
-        """Return the configuration dialog."""
-        if self._dlg is None:
-            self._dlg = SetViewDateDialog()
-        return self._dlg
-
     def __init__(self):
         self.enabled = True
         self.checked = False
 
     def onClick(self):
         try:
-            self.dlg.Show(True)
+            toolDialog(im_toolbox,"setviewdate")
         except Exception as e:
             pythonaddins.MessageBox("Can't Show Set View Date Dialog. %s" % e, "Error", "0")
