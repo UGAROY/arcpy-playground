@@ -122,14 +122,14 @@ class UpdateIMTablesDialog(wx.Frame):
 
                         if updated_intersections:
                             update_new_intersection_id(workspace,last_update_date,updated_intersections)
-                    #---------------------------------------------------------------------------------------------------
+                    # ---------------------------------------------------------------------------------------------------
 
                     update_intersection_route_event(workspace,last_update_date)
                     update_roadway_segment_event(workspace,last_update_date)
                     update_intersection_approach_event(workspace,last_update_date)
 
                     custom_update_odot(workspace, today_date)
-                    write_im_meta_data(workspace, None, today_date)
+                    # write_im_meta_data(workspace, None, today_date)
 
                     clear_table_of_content(workspace)
 
@@ -137,7 +137,6 @@ class UpdateIMTablesDialog(wx.Frame):
                                           "Update Intersections Info", wx.OK | wx.ICON_INFORMATION)
                     dlg.ShowModal()
 
-                    # self.Show(True)
             else:
                 msg_dlg= wx.MessageDialog(None,"No changed have been made since %s" % last_update_date,
                                           "Update Intersections Info", wx.OK | wx.ICON_INFORMATION)
