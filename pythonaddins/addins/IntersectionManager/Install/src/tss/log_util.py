@@ -46,7 +46,7 @@ def setup_logger(folder_name, output_dir=""):
                 "filename": log_path,
                 "encoding": "utf8",
                 "maxBytes": 1024,
-                "backupCount": 3
+                "backupCount": 10
             },
             "ags": {
                 "level":"INFO",

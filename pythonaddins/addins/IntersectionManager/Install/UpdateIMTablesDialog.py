@@ -1,9 +1,8 @@
 import os
 import wx
 import traceback
-import ConfigParser
+import datetime
 
-from datetime import datetime, timedelta
 from components.TableDialog import TableDialog
 
 from src.tss import truncate_datetime
@@ -75,7 +74,7 @@ class UpdateIMTablesDialog(wx.Frame):
         self.CenterOnScreen()
 
         # Initiate table
-        col_names = ["Object ID","Current Intersection ID","New Intersection ID"]
+        col_names = ["Object ID","New Intersection ID","Renamed Intersection ID"]
         self.table = TableDialog("Update Intersection Info",data=[],colLabels=col_names)
 
         # # Uncomment line below when testing as a standalone application.
@@ -93,7 +92,7 @@ class UpdateIMTablesDialog(wx.Frame):
             meta_date_dict = read_im_meta_data(workspace)
             create_date = meta_date_dict["create_date"]
             last_update_date =  meta_date_dict["last_update_date"]
-            today_date = truncate_datetime(datetime.now())
+            today_date = truncate_datetime(datetime.datetime.now())
 
             if  last_update_date == today_date:
                 # If the last_update_date is today, we will have to roll back the changes to the intersection tables
@@ -101,7 +100,7 @@ class UpdateIMTablesDialog(wx.Frame):
                 # events are all created yesterday. This is a workaround since the date in the network is the only
                 # indicator we can use the differentiate the new and old features
                 roll_back(workspace, last_update_date)
-                last_update_date = last_update_date - timedelta(days=1)
+                last_update_date = last_update_date - datetime.timedelta(days=1)
             elif last_update_date is None:
                 last_update_date = create_date
 

@@ -1,4 +1,5 @@
 from datetime import timedelta
+import os
 import time
 import arcpy
 from tss import format_sql_date, get_maximum_id, subset_data_exist, build_string_in_sql_expression, \
@@ -60,17 +61,17 @@ def check_intersection_event_updates(workspace, input_date):
     network_from_date_field = parameters.get(client,"network_from_date_field")
     network_to_date_field = parameters.get(client,"network_to_date_field")
 
-    intersection_event = schemas.get("intersection_event")
+    intersection_event = os.path.join(workspace,schemas.get("intersection_event"))
     intersection_id_field = schemas.get("intersection_id_field")
 
-    intersection_route_event = schemas.get("intersection_route_event")
+    intersection_route_event = os.path.join(workspace,schemas.get("intersection_route_event"))
     intersection_route_on_rid_field = schemas.get("intersection_route_on_rid_field")
     intersection_route_on_rname_field = schemas.get("intersection_route_on_rname_field")
     intersection_route_on_measure_field = schemas.get("intersection_route_on_measure_field")
     intersection_route_at_rid_field = schemas.get("intersection_route_at_rid_field")
     intersection_route_at_rname_field = schemas.get("intersection_route_at_rname_field")
 
-    roadway_segment_event = schemas.get("roadway_segment_event")
+    roadway_segment_event = os.path.join(workspace,schemas.get("roadway_segment_event"))
     roadway_segment_id_field = schemas.get("roadway_segment_id_field")
     roadway_segment_rid_field = schemas.get("roadway_segment_rid_field")
     roadway_segment_from_meas_field = schemas.get("roadway_segment_from_meas_field")
@@ -92,7 +93,7 @@ def check_intersection_event_updates(workspace, input_date):
     aadt_from_date_field = parameters.get(client,"aadt_from_date_field")
     aadt_to_date_field = parameters.get(client,"aadt_to_date_field")
 
-    intersection_approach_event = schemas.get("intersection_approach_event")
+    intersection_approach_event = os.path.join(workspace,schemas.get("intersection_approach_event"))
     intersection_approach_id_field = schemas.get("intersection_approach_id_field")
     intersection_approach_leg_id_field = schemas.get("intersection_approach_leg_id_field")
     intersection_approach_leg_type_field = schemas.get("intersection_approach_leg_type_field")
@@ -208,10 +209,6 @@ def check_intersection_event_updates(workspace, input_date):
 
     logger.info("Start checking change/update")
 
-    # make a copy of network. Following operations will base on this copy.
-    copied_network = "copied_network"
-    arcpy.CopyFeatures_management(network,copied_network)
-
     arcpy.MakeFeatureLayer_management(network, previous_active_network_layer, previous_active_network_string)
     # Create current network layer
     arcpy.MakeFeatureLayer_management(network, current_active_network_layer, current_active_network_string)
@@ -270,17 +267,17 @@ def update_intersection_event(workspace, input_date):
     network_from_date_field = parameters.get(client,"network_from_date_field")
     network_to_date_field = parameters.get(client,"network_to_date_field")
 
-    intersection_event = schemas.get("intersection_event")
+    intersection_event = os.path.join(workspace,schemas.get("intersection_event"))
     intersection_id_field = schemas.get("intersection_id_field")
 
-    intersection_route_event = schemas.get("intersection_route_event")
+    intersection_route_event = os.path.join(workspace,schemas.get("intersection_route_event"))
     intersection_route_on_rid_field = schemas.get("intersection_route_on_rid_field")
     intersection_route_on_rname_field = schemas.get("intersection_route_on_rname_field")
     intersection_route_on_measure_field = schemas.get("intersection_route_on_measure_field")
     intersection_route_at_rid_field = schemas.get("intersection_route_at_rid_field")
     intersection_route_at_rname_field = schemas.get("intersection_route_at_rname_field")
 
-    roadway_segment_event = schemas.get("roadway_segment_event")
+    roadway_segment_event = os.path.join(workspace,schemas.get("roadway_segment_event"))
     roadway_segment_id_field = schemas.get("roadway_segment_id_field")
     roadway_segment_rid_field = schemas.get("roadway_segment_rid_field")
     roadway_segment_from_meas_field = schemas.get("roadway_segment_from_meas_field")
@@ -302,7 +299,7 @@ def update_intersection_event(workspace, input_date):
     aadt_from_date_field = parameters.get(client,"aadt_from_date_field")
     aadt_to_date_field = parameters.get(client,"aadt_to_date_field")
 
-    intersection_approach_event = schemas.get("intersection_approach_event")
+    intersection_approach_event = os.path.join(workspace,schemas.get("intersection_approach_event"))
     intersection_approach_id_field = schemas.get("intersection_approach_id_field")
     intersection_approach_leg_id_field = schemas.get("intersection_approach_leg_id_field")
     intersection_approach_leg_type_field = schemas.get("intersection_approach_leg_type_field")
@@ -412,14 +409,34 @@ def update_intersection_event(workspace, input_date):
     arcpy.MakeFeatureLayer_management(aadt_event, active_current_aadt_layer, query_filter)
     # -------------------------------------------------------------------------------------
 
-    # make a copy of network. Following operations will base on this copy.
-    copied_network = "copied_network"
-    arcpy.CopyFeatures_management(network,copied_network)
-
-    # Create a previous active network layer. This is corresponding to the current state of all the intersection tables
+    """
+    Get All Differences Between Previous and Current Dataset
+    """
     arcpy.MakeFeatureLayer_management(network, previous_active_network_layer, previous_active_network_string)
     # Create current network layer
     arcpy.MakeFeatureLayer_management(network, current_active_network_layer, current_active_network_string)
+
+    # Create created network layer since the last_update_date and get a list created route ids
+    arcpy.MakeFeatureLayer_management(network, created_network_layer, network_created_since_date_string)
+    with arcpy.da.SearchCursor(created_network_layer, [network_route_id_field]) as sCursor:
+        for sRow in sCursor:
+            route_id = sRow[0]
+            if route_id not in created_route_ids:
+                created_route_ids.append(route_id)
+    # Create retired network layer and the retired route ids.
+    arcpy.MakeFeatureLayer_management(network, retired_network_layer, network_retired_since_date_string)
+    with arcpy.da.SearchCursor(retired_network_layer, [network_route_id_field]) as sCursor:
+        for sRow in sCursor:
+            route_id = sRow[0]
+            if route_id not in retired_route_ids:
+                retired_route_ids.append(route_id)
+    # Get the updated and retired route ids based on the updated functional class and aadt
+    if function_class_from_date_field and function_class_to_date_field:
+        if subset_data_exist(function_class_event, "%s or %s" % (function_class_created_since_date_string, function_class_retired_since_date_string)):
+            created_retired_function_class_exist = True
+    if aadt_from_date_field and aadt_from_date_field:
+        if subset_data_exist(aadt_event, "%s or %s" % (aadt_created_since_date_string, aadt_retired_since_date_string)):
+            created_retired_aadt_exist = True
 
     #Created network at all states ----------------------------------------------------------------------------------------------
     inserted_route_ids = list(set(created_route_ids) - set(retired_route_ids))
@@ -537,17 +554,17 @@ def get_new_intersection_event(workspace,input_date):
     network_from_date_field = parameters.get(client,"network_from_date_field")
     network_to_date_field = parameters.get(client,"network_to_date_field")
 
-    intersection_event = schemas.get("intersection_event")
+    intersection_event = os.path.join(workspace,schemas.get("intersection_event"))
     intersection_id_field = schemas.get("intersection_id_field")
 
-    intersection_route_event = schemas.get("intersection_route_event")
+    intersection_route_event = os.path.join(workspace,schemas.get("intersection_route_event"))
     intersection_route_on_rid_field = schemas.get("intersection_route_on_rid_field")
     intersection_route_on_rname_field = schemas.get("intersection_route_on_rname_field")
     intersection_route_on_measure_field = schemas.get("intersection_route_on_measure_field")
     intersection_route_at_rid_field = schemas.get("intersection_route_at_rid_field")
     intersection_route_at_rname_field = schemas.get("intersection_route_at_rname_field")
 
-    roadway_segment_event = schemas.get("roadway_segment_event")
+    roadway_segment_event = os.path.join(workspace,schemas.get("roadway_segment_event"))
     roadway_segment_id_field = schemas.get("roadway_segment_id_field")
     roadway_segment_rid_field = schemas.get("roadway_segment_rid_field")
     roadway_segment_from_meas_field = schemas.get("roadway_segment_from_meas_field")
@@ -569,7 +586,7 @@ def get_new_intersection_event(workspace,input_date):
     aadt_from_date_field = parameters.get(client,"aadt_from_date_field")
     aadt_to_date_field = parameters.get(client,"aadt_to_date_field")
 
-    intersection_approach_event = schemas.get("intersection_approach_event")
+    intersection_approach_event = os.path.join(workspace,schemas.get("intersection_approach_event"))
     intersection_approach_id_field = schemas.get("intersection_approach_id_field")
     intersection_approach_leg_id_field = schemas.get("intersection_approach_leg_id_field")
     intersection_approach_leg_type_field = schemas.get("intersection_approach_leg_type_field")
@@ -693,46 +710,49 @@ def get_new_intersection_event(workspace,input_date):
     """
     logger.info("Get new intersection events for user review")
 
-    mxd = arcpy.mapping.MapDocument("CURRENT")
-    df = mxd.activeDataFrame
+    intersections = []
 
     # generate intersection layers for review
     new_intersection_string = "%s >= %s" % (from_date_field, last_update_date)
     new_created_intersections = "new_created_intersections"
     arcpy.MakeFeatureLayer_management(intersection_event,new_created_intersections,new_intersection_string)
 
-    retired_intersection_string = "({0} >= {1}) AND ({0} <= CURRENT_TIMESTAMP)".format(to_date_field, last_update_date)
-    new_retired_intersections = "new_retired_intersections"
-    arcpy.MakeFeatureLayer_management(intersection_event,new_retired_intersections,retired_intersection_string)
+    count = arcpy.GetCount_management(new_created_intersections)
+    if int(count.getOutput(0)):
+        retired_intersection_string = "({0} >= {1}) AND ({0} <= CURRENT_TIMESTAMP)".format(to_date_field, last_update_date)
+        new_retired_intersections = "new_retired_intersections"
+        arcpy.MakeFeatureLayer_management(intersection_event,new_retired_intersections,retired_intersection_string)
 
-    # add layers to map document
-    new_created_intersections_lyr = arcpy.mapping.Layer(new_created_intersections)
-    arcpy.mapping.AddLayer(df,new_created_intersections_lyr,"BOTTOM")
+        mxd = arcpy.mapping.MapDocument("CURRENT")
+        df = mxd.activeDataFrame
 
-    new_retired_intersections_lyr = arcpy.mapping.Layer(new_retired_intersections)
-    arcpy.mapping.AddLayer(df,new_retired_intersections_lyr,"BOTTOM")
+        # add layers to map document
+        new_created_intersections_lyr = arcpy.mapping.Layer(new_created_intersections)
+        arcpy.mapping.AddLayer(df,new_created_intersections_lyr,"BOTTOM")
 
-    current_active_network_layer_lyr = arcpy.mapping.Layer(current_active_network_layer)
-    arcpy.mapping.AddLayer(df,current_active_network_layer_lyr,"BOTTOM")
+        new_retired_intersections_lyr = arcpy.mapping.Layer(new_retired_intersections)
+        arcpy.mapping.AddLayer(df,new_retired_intersections_lyr,"BOTTOM")
 
-    previous_active_network_layer_lyr = arcpy.mapping.Layer(previous_active_network_layer)
-    arcpy.mapping.AddLayer(df,previous_active_network_layer_lyr,"BOTTOM")
+        current_active_network_layer_lyr = arcpy.mapping.Layer(current_active_network_layer)
+        arcpy.mapping.AddLayer(df,current_active_network_layer_lyr,"BOTTOM")
 
-    arcpy.RefreshActiveView()
-    arcpy.RefreshTOC()
+        previous_active_network_layer_lyr = arcpy.mapping.Layer(previous_active_network_layer)
+        arcpy.mapping.AddLayer(df,previous_active_network_layer_lyr,"BOTTOM")
 
-    # del new_created_intersections_lyr,new_retired_intersections_lyr,current_active_network_layer_lyr,previous_active_network_layer_lyr
+        arcpy.RefreshActiveView()
+        arcpy.RefreshTOC()
 
-    # Get new intersections -------------------------------------------------------------------------------
-    intersections = []
-    with arcpy.da.UpdateCursor(new_created_intersections,["OBJECTID","Intersection_ID"]) as uCursor:
-        for row in uCursor:
-            tmp = []
-            for value in row:
-                tmp.append(str(value))
-            tmp.append("")
-            intersections.append(tmp)
-    del uCursor
+        # del new_created_intersections_lyr,new_retired_intersections_lyr,current_active_network_layer_lyr,previous_active_network_layer_lyr
+
+        # Get new intersections -------------------------------------------------------------------------------
+        with arcpy.da.UpdateCursor(new_created_intersections,["OBJECTID","Intersection_ID"]) as uCursor:
+            for row in uCursor:
+                tmp = []
+                for value in row:
+                    tmp.append(str(value))
+                tmp.append("")
+                intersections.append(tmp)
+        del uCursor
 
     return intersections
     #-------------------------------------------------------------------------------------------------------------------
@@ -761,17 +781,17 @@ def update_new_intersection_id(workspace,input_date, updated_intersections):
     network_from_date_field = parameters.get(client,"network_from_date_field")
     network_to_date_field = parameters.get(client,"network_to_date_field")
 
-    intersection_event = schemas.get("intersection_event")
+    intersection_event = os.path.join(workspace,schemas.get("intersection_event"))
     intersection_id_field = schemas.get("intersection_id_field")
 
-    intersection_route_event = schemas.get("intersection_route_event")
+    intersection_route_event = os.path.join(workspace,schemas.get("intersection_route_event"))
     intersection_route_on_rid_field = schemas.get("intersection_route_on_rid_field")
     intersection_route_on_rname_field = schemas.get("intersection_route_on_rname_field")
     intersection_route_on_measure_field = schemas.get("intersection_route_on_measure_field")
     intersection_route_at_rid_field = schemas.get("intersection_route_at_rid_field")
     intersection_route_at_rname_field = schemas.get("intersection_route_at_rname_field")
 
-    roadway_segment_event = schemas.get("roadway_segment_event")
+    roadway_segment_event = os.path.join(workspace,schemas.get("roadway_segment_event"))
     roadway_segment_id_field = schemas.get("roadway_segment_id_field")
     roadway_segment_rid_field = schemas.get("roadway_segment_rid_field")
     roadway_segment_from_meas_field = schemas.get("roadway_segment_from_meas_field")
@@ -793,7 +813,7 @@ def update_new_intersection_id(workspace,input_date, updated_intersections):
     aadt_from_date_field = parameters.get(client,"aadt_from_date_field")
     aadt_to_date_field = parameters.get(client,"aadt_to_date_field")
 
-    intersection_approach_event = schemas.get("intersection_approach_event")
+    intersection_approach_event = os.path.join(workspace,schemas.get("intersection_approach_event"))
     intersection_approach_id_field = schemas.get("intersection_approach_id_field")
     intersection_approach_leg_id_field = schemas.get("intersection_approach_leg_id_field")
     intersection_approach_leg_type_field = schemas.get("intersection_approach_leg_type_field")
@@ -937,17 +957,17 @@ def update_intersection_route_event(workspace, input_date):
     network_from_date_field = parameters.get(client,"network_from_date_field")
     network_to_date_field = parameters.get(client,"network_to_date_field")
 
-    intersection_event = schemas.get("intersection_event")
+    intersection_event = os.path.join(workspace,schemas.get("intersection_event"))
     intersection_id_field = schemas.get("intersection_id_field")
 
-    intersection_route_event = schemas.get("intersection_route_event")
+    intersection_route_event = os.path.join(workspace,schemas.get("intersection_route_event"))
     intersection_route_on_rid_field = schemas.get("intersection_route_on_rid_field")
     intersection_route_on_rname_field = schemas.get("intersection_route_on_rname_field")
     intersection_route_on_measure_field = schemas.get("intersection_route_on_measure_field")
     intersection_route_at_rid_field = schemas.get("intersection_route_at_rid_field")
     intersection_route_at_rname_field = schemas.get("intersection_route_at_rname_field")
 
-    roadway_segment_event = schemas.get("roadway_segment_event")
+    roadway_segment_event = os.path.join(workspace,schemas.get("roadway_segment_event"))
     roadway_segment_id_field = schemas.get("roadway_segment_id_field")
     roadway_segment_rid_field = schemas.get("roadway_segment_rid_field")
     roadway_segment_from_meas_field = schemas.get("roadway_segment_from_meas_field")
@@ -969,7 +989,7 @@ def update_intersection_route_event(workspace, input_date):
     aadt_from_date_field = parameters.get(client,"aadt_from_date_field")
     aadt_to_date_field = parameters.get(client,"aadt_to_date_field")
 
-    intersection_approach_event = schemas.get("intersection_approach_event")
+    intersection_approach_event = os.path.join(workspace,schemas.get("intersection_approach_event"))
     intersection_approach_id_field = schemas.get("intersection_approach_id_field")
     intersection_approach_leg_id_field = schemas.get("intersection_approach_leg_id_field")
     intersection_approach_leg_type_field = schemas.get("intersection_approach_leg_type_field")
@@ -1079,14 +1099,10 @@ def update_intersection_route_event(workspace, input_date):
     arcpy.MakeFeatureLayer_management(aadt_event, active_current_aadt_layer, query_filter)
     # -------------------------------------------------------------------------------------
 
-    # make a copy of network. Following operations will base on this copy.
-    copied_network = "copied_network"
-    arcpy.CopyFeatures_management(network,copied_network)
-
     # Create a previous active network layer. This is corresponding to the current state of all the intersection tables
-    arcpy.MakeFeatureLayer_management(copied_network, previous_active_network_layer, previous_active_network_string)
+    arcpy.MakeFeatureLayer_management(network, previous_active_network_layer, previous_active_network_string)
     # Create current network layer
-    arcpy.MakeFeatureLayer_management(copied_network, current_active_network_layer, current_active_network_string)
+    arcpy.MakeFeatureLayer_management(network, current_active_network_layer, current_active_network_string)
 
     #Created network at all states ----------------------------------------------------------------------------------------------
     inserted_route_ids = list(set(created_route_ids) - set(retired_route_ids))
@@ -1220,17 +1236,17 @@ def update_roadway_segment_event(workspace, input_date):
     network_from_date_field = parameters.get(client,"network_from_date_field")
     network_to_date_field = parameters.get(client,"network_to_date_field")
 
-    intersection_event = schemas.get("intersection_event")
+    intersection_event = os.path.join(workspace,schemas.get("intersection_event"))
     intersection_id_field = schemas.get("intersection_id_field")
 
-    intersection_route_event = schemas.get("intersection_route_event")
+    intersection_route_event = os.path.join(workspace,schemas.get("intersection_route_event"))
     intersection_route_on_rid_field = schemas.get("intersection_route_on_rid_field")
     intersection_route_on_rname_field = schemas.get("intersection_route_on_rname_field")
     intersection_route_on_measure_field = schemas.get("intersection_route_on_measure_field")
     intersection_route_at_rid_field = schemas.get("intersection_route_at_rid_field")
     intersection_route_at_rname_field = schemas.get("intersection_route_at_rname_field")
 
-    roadway_segment_event = schemas.get("roadway_segment_event")
+    roadway_segment_event = os.path.join(workspace,schemas.get("roadway_segment_event"))
     roadway_segment_id_field = schemas.get("roadway_segment_id_field")
     roadway_segment_rid_field = schemas.get("roadway_segment_rid_field")
     roadway_segment_from_meas_field = schemas.get("roadway_segment_from_meas_field")
@@ -1252,7 +1268,7 @@ def update_roadway_segment_event(workspace, input_date):
     aadt_from_date_field = parameters.get(client,"aadt_from_date_field")
     aadt_to_date_field = parameters.get(client,"aadt_to_date_field")
 
-    intersection_approach_event = schemas.get("intersection_approach_event")
+    intersection_approach_event = os.path.join(workspace,schemas.get("intersection_approach_event"))
     intersection_approach_id_field = schemas.get("intersection_approach_id_field")
     intersection_approach_leg_id_field = schemas.get("intersection_approach_leg_id_field")
     intersection_approach_leg_type_field = schemas.get("intersection_approach_leg_type_field")
@@ -1362,14 +1378,10 @@ def update_roadway_segment_event(workspace, input_date):
     arcpy.MakeFeatureLayer_management(aadt_event, active_current_aadt_layer, query_filter)
     # -------------------------------------------------------------------------------------
 
-    # make a copy of network. Following operations will base on this copy.
-    copied_network = "copied_network"
-    arcpy.CopyFeatures_management(network,copied_network)
-
     # Create a previous active network layer. This is corresponding to the current state of all the intersection tables
-    arcpy.MakeFeatureLayer_management(copied_network, previous_active_network_layer, previous_active_network_string)
+    arcpy.MakeFeatureLayer_management(network, previous_active_network_layer, previous_active_network_string)
     # Create current network layer
-    arcpy.MakeFeatureLayer_management(copied_network, current_active_network_layer, current_active_network_string)
+    arcpy.MakeFeatureLayer_management(network, current_active_network_layer, current_active_network_string)
 
     #Created network at all states ----------------------------------------------------------------------------------------------
     inserted_route_ids = list(set(created_route_ids) - set(retired_route_ids))
@@ -1492,17 +1504,17 @@ def update_intersection_approach_event(workspace, input_date):
     network_from_date_field = parameters.get(client,"network_from_date_field")
     network_to_date_field = parameters.get(client,"network_to_date_field")
 
-    intersection_event = schemas.get("intersection_event")
+    intersection_event = os.path.join(workspace,schemas.get("intersection_event"))
     intersection_id_field = schemas.get("intersection_id_field")
 
-    intersection_route_event = schemas.get("intersection_route_event")
+    intersection_route_event = os.path.join(workspace,schemas.get("intersection_route_event"))
     intersection_route_on_rid_field = schemas.get("intersection_route_on_rid_field")
     intersection_route_on_rname_field = schemas.get("intersection_route_on_rname_field")
     intersection_route_on_measure_field = schemas.get("intersection_route_on_measure_field")
     intersection_route_at_rid_field = schemas.get("intersection_route_at_rid_field")
     intersection_route_at_rname_field = schemas.get("intersection_route_at_rname_field")
 
-    roadway_segment_event = schemas.get("roadway_segment_event")
+    roadway_segment_event = os.path.join(workspace,schemas.get("roadway_segment_event"))
     roadway_segment_id_field = schemas.get("roadway_segment_id_field")
     roadway_segment_rid_field = schemas.get("roadway_segment_rid_field")
     roadway_segment_from_meas_field = schemas.get("roadway_segment_from_meas_field")
@@ -1524,7 +1536,7 @@ def update_intersection_approach_event(workspace, input_date):
     aadt_from_date_field = parameters.get(client,"aadt_from_date_field")
     aadt_to_date_field = parameters.get(client,"aadt_to_date_field")
 
-    intersection_approach_event = schemas.get("intersection_approach_event")
+    intersection_approach_event = os.path.join(workspace,schemas.get("intersection_approach_event"))
     intersection_approach_id_field = schemas.get("intersection_approach_id_field")
     intersection_approach_leg_id_field = schemas.get("intersection_approach_leg_id_field")
     intersection_approach_leg_type_field = schemas.get("intersection_approach_leg_type_field")
@@ -1634,14 +1646,10 @@ def update_intersection_approach_event(workspace, input_date):
     arcpy.MakeFeatureLayer_management(aadt_event, active_current_aadt_layer, query_filter)
     # -------------------------------------------------------------------------------------
 
-    # make a copy of network. Following operations will base on this copy.
-    copied_network = "copied_network"
-    arcpy.CopyFeatures_management(network,copied_network)
-
     # Create a previous active network layer. This is corresponding to the current state of all the intersection tables
-    arcpy.MakeFeatureLayer_management(copied_network, previous_active_network_layer, previous_active_network_string)
+    arcpy.MakeFeatureLayer_management(network, previous_active_network_layer, previous_active_network_string)
     # Create current network layer
-    arcpy.MakeFeatureLayer_management(copied_network, current_active_network_layer, current_active_network_string)
+    arcpy.MakeFeatureLayer_management(network, current_active_network_layer, current_active_network_string)
 
     #Created network at all states ----------------------------------------------------------------------------------------------
     # inserted_route_ids = list(set(created_route_ids) - set(retired_route_ids))
