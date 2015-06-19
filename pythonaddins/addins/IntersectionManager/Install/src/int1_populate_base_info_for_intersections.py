@@ -1,6 +1,6 @@
-from datetime import datetime
 import arcpy
 
+from datetime import datetime
 from tss import format_sql_date
 from util.helper import get_default_parameters
 from config.schema import default_schemas

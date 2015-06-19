@@ -4,7 +4,8 @@ import arcpy
 
 from ohio_dot_util import calculate_latitude_longitude, calculate_county_jurisdiction_district, calculate_intersection_geometry
 from ..config.schema import default_schemas
-from ..tss import format_sql_date, build_string_in_sql_expression, delete_identical_only_keep_min_oid, delete_subset_data
+from ..tss import format_sql_date
+from ..tss.ags import build_string_in_sql_expression, delete_identical_only_keep_min_oid, delete_subset_data
 from ..util.helper import get_default_parameters
 
 default_parameters = get_default_parameters()

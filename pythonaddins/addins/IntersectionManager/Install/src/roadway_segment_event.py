@@ -1,5 +1,5 @@
 import arcpy
-from tss import transform_dataset_keep_fields, populate_auto_increment_id, alter_field_name
+from tss.ags import transform_dataset_keep_fields, populate_auto_increment_id, alter_field_name
 
 
 class RoadwaySegmentEvent:

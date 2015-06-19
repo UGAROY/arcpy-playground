@@ -1,7 +1,7 @@
 import os
 import sys
 
-from ..tss import get_parent_directory
+from src.tss import get_parent_directory
 
 def get_default_parameters():
     try:

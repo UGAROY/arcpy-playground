@@ -2,10 +2,12 @@ from datetime import timedelta
 import os
 import time
 import arcpy
-from tss import format_sql_date, get_maximum_id, subset_data_exist, build_string_in_sql_expression, \
-    delete_identical_only_keep_min_oid,extract_number_from_string
+
+from tss import format_sql_date, extract_number_from_string
+from tss.ags import get_maximum_id, subset_data_exist, build_string_in_sql_expression, delete_identical_only_keep_min_oid
 from util.helper import get_default_parameters
 from config.schema import default_schemas
+
 import intersection_event as intersection_event_mod
 import intersection_route_event as intersection_route_event_mod
 import roadway_segment_event as roadway_segment_event_mod
@@ -1754,7 +1756,8 @@ def update_intersection_approach_event(workspace, input_date):
             }
 
     # Find the corresponding records in the old timestamp and process
-    # to be analyzed intersections should include 1) along the deleted routes 2) along the updated before routes 3) old active but intersected with the inserted route  4) intersected with attributes changed layers
+    # to be analyzed intersections should include 1) along the deleted routes 2) along the updated before routes
+    # 3) old active but intersected with the inserted route  4) intersected with attributes changed layers
     arcpy.MakeFeatureLayer_management(old_active_intersection_layer, ia_tba_previous_intersection_layer)
     arcpy.SelectLayerByLocation_management(ia_tba_previous_intersection_layer, "INTERSECT", deleted_network_layer, search_radius, "NEW_SELECTION")
     arcpy.SelectLayerByLocation_management(ia_tba_previous_intersection_layer, "INTERSECT", updated_before_network_layer, search_radius, "ADD_TO_SELECTION")
@@ -1777,7 +1780,7 @@ def update_intersection_approach_event(workspace, input_date):
             intersection_approach_id, route_id, intersection_approach_angle, intersection_approach_direction, beg_inf, end_inf, leg_type, leg_id = uRow[1], uRow[2], uRow[3], uRow[4], uRow[5], uRow[6], uRow[7], uRow[8]
             if intersection_approach_id in inter_seg__info_dict:
                 info_dict = inter_seg__info_dict[intersection_approach_id]
-                if info_dict["Route_ID"] == route_id and info_dict["Beg_Inf"] == beg_inf and info_dict["End_Inf"] == end_inf and info_dict["Approach_Angle"] == intersection_approach_angle and info_dict["Approach_Direction"] == intersection_approach_direction and info_dict["Leg_Type"] == leg_type and info_dict["Leg_Id"] == leg_id:
+                if info_dict["Route_ID"] == route_id and info_dict["Beg_Inf"] == beg_inf and info_dict["End_Inf"] == end_inf and info_dict["Approach_Angle"] == intersection_approach_angle and info_dict["Approach_Direction"] == intersection_approach_direction and info_dict["Leg_Type"] == leg_type:
                     info_dict["Processed"] = True
                     continue
                 else:
@@ -1788,6 +1791,14 @@ def update_intersection_approach_event(workspace, input_date):
                 uCursor.updateRow(uRow)
 
     # Insert unprocessed records
+    # 1) First, get the max leg id for each intersection, this should include the retired legs
+    # 2) Insert the new legs
+    inter__max_leg_id_dict = {}
+    with arcpy.da.SearchCursor(intersection_approach_event, intersection_approach_leg_id_field, ia_tba_previous_inters_where_clause) as sCursor:
+        for sRow in sCursor:
+            leg_id = sRow[0]
+            if leg_id > inter__max_leg_id_dict.get("LegId", 0):
+                inter__max_leg_id_dict["LegId"] = leg_id
     with arcpy.da.InsertCursor(intersection_approach_event, [from_date_field, roadway_segment_rid_field,
                                                              intersection_id_field, roadway_segment_id_field, intersection_approach_id_field,
                                                              intersection_approach_angle_field, intersection_approach_leg_dir_field,
@@ -1804,7 +1815,8 @@ def update_intersection_approach_event(workspace, input_date):
                 beg_inf = info_dict["Beg_Inf"]
                 end_inf = info_dict["End_Inf"]
                 leg_type = info_dict["Leg_Type"]
-                leg_id = info_dict["Leg_Id"]
+                inter__max_leg_id_dict[intersection_id] += 1   # Increment by 1
+                leg_id = inter__max_leg_id_dict[intersection_id]
                 iCursor.insertRow((from_date, route_id,
                                    intersection_id, segment_id, inter_approach_id,
                                    approach_angle, approach_direction,

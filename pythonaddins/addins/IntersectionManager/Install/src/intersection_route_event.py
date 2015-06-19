@@ -35,7 +35,7 @@ class IntersectionRouteEvent:
         self.create_intersection_route_event_table()
         self.populate_intersection_route_event_table()
         self.add_route_name_fields()
-        self.clear_intermediate_date()
+        self.clear_intermediate_data()
         return self.intersection_route_event
 
     def create_intersection_route_event_table(self):
@@ -91,7 +91,7 @@ class IntersectionRouteEvent:
             arcpy.CalculateField_management(self.intersection_route_event, self.intersection_route_at_rname_field, "[%s]" % self.network_route_name_field)
             arcpy.DeleteField_management(self.intersection_route_event, self.network_route_name_field)
 
-    def clear_intermediate_date(self):
+    def clear_intermediate_data(self):
         to_be_deleted_items = [intersections_along_route, inter_route_join]
         for item in to_be_deleted_items:
             arcpy.Delete_management(item)

@@ -1,10 +1,11 @@
 import arcpy
 
-from tss import transform_dataset_keep_fields
+from tss.ags import transform_dataset_keep_fields
 
 
 # Intermediate data
 simplify_network = "simplify_network"
+no_mz_network = "no_mz_network"
 
 
 class IntersectionEvent:
@@ -29,7 +30,8 @@ class IntersectionEvent:
         arcpy.env.outputZFlag = "Disabled"
         arcpy.env.outputMFlag = "Disabled"
 
-        arcpy.SimplifyLine_cartography(self.network, simplify_network, "POINT_REMOVE", "999999 meters")
+        arcpy.CopyFeatures_management(self.network, no_mz_network)
+        arcpy.SimplifyLine_cartography(no_mz_network, simplify_network, "POINT_REMOVE", "999999 meters")
 
         arcpy.FeatureVerticesToPoints_management(simplify_network, self.intersection_event, "ALL")
         self.filter_out_none_intersections()

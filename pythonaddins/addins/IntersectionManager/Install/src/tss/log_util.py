@@ -62,13 +62,6 @@ def setup_logger(folder_name, output_dir=""):
         }
     })
 
-    #
-    # logging.basicConfig(level=logging.DEBUG,
-    #                     format="%(asctime)s %(name)-12s %(levelname)-8s %(message)s",
-    #                     datefmt="%m-%d %H:%M",
-    #                     filename="log-%s.log" % time_stamp,
-    #                     filemode="w")
-
 
 def create_output_folder(path):
     if os.path.exists(path):

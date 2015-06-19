@@ -1,5 +1,3 @@
-__author__ = 'yluo'
-
 def truncate_datetime(datetime):
     return None if datetime is None else datetime.replace(hour=0, minute=0, second=0, microsecond=0)
 

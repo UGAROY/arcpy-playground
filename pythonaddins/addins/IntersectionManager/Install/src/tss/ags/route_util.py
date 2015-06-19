@@ -1,8 +1,4 @@
-__author__ = 'yluo'
-
 import arcpy
-
-arcpy.env.overwriteOutput = True
 
 def is_gapped_polyline(shape):
     """

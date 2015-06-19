@@ -4,10 +4,11 @@ import sys
 sys.path.append(os.path.dirname(__file__))
 import pythonaddins
 
-from PopulateIMTablesDialog import PopulateIMTablesDialog
-from ConfigurationDialog import ConfigurationDialog
-from SetViewDateDialog import SetViewDateDialog
+# from PopulateIMTablesDialog import PopulateIMTablesDialog
+# from ConfigurationDialog import ConfigurationDialog
+# from SetViewDateDialog import SetViewDateDialog
 from UpdateIMTablesDialog import UpdateIMTablesDialog
+
 
 from src.util.helper import toolDialog
 
@@ -18,15 +19,22 @@ im_toolbox =  os.path.join(local_path, "im.tbx")
 class IntersectionManagerExt(object):
     """Implementation for IntersectionManager_addin.extension (Extension)"""
     def __init__(self):
+        with open(r"C:\Temp\b.txt", "a") as f:
+            f.write("__init__")
         self._wxApp = None
         self._enabled = None
 
     def startup(self):
         """On startup of ArcGIS, create the wxPython Simple app and start the mainloop."""
         try:
+            with open(r"C:\Temp\b.txt", "a") as f:
+                f.write("startup")
             from wx import App
             self._wxApp = App(False)
             self._wxApp.MainLoop()
+
+            with open(r"C:\Temp\a.txt", "a") as f:
+                f.write("after wx python")
 
             # setup logger
             from src.tss import setup_logger

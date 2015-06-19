@@ -1,6 +1,6 @@
 import arcpy
 
-from ..tss import build_string_in_sql_expression
+from ..tss.ags import build_string_in_sql_expression
 from ..config.schema import default_schemas
 
 

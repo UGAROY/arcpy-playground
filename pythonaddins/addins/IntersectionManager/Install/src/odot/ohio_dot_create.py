@@ -1,7 +1,7 @@
 import arcpy
 
 from ohio_dot_util import calculate_latitude_longitude, calculate_county_jurisdiction_district, calculate_intersection_geometry
-from ..tss import keep_fields_fms
+from ..tss.ags import keep_fields_fms
 from ..config.schema import default_schemas
 
 

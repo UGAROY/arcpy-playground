@@ -1,8 +1,7 @@
 import arcpy
 
-from tss import geodesic_angle_to_circular_angle, geodesic_angle_to_direction
+from tss.ags import geodesic_angle_to_circular_angle, geodesic_angle_to_direction, transform_dataset_keep_fields, alter_field_name
 from util.leg import calculate_leg_type_property, populate_leg_id_by_intersection
-from tss import transform_dataset_keep_fields, alter_field_name
 
 
 # Intermediate data
@@ -91,7 +90,7 @@ class IntersectionApproachEvent:
         self.populate_leg_type()
         logger.info("Finished populating the leg type")
         self.adjust_output_schema()
-        self.clear_intermediate_date()
+        self.clear_intermediate_data()
 
         return self.intersection_approach_event
 
@@ -275,7 +274,7 @@ class IntersectionApproachEvent:
                                        self.roadway_segment_rid_field, self.intersection_approach_beg_inf_field,
                                        self.intersection_approach_end_inf_field])
 
-    def clear_intermediate_date(self):
+    def clear_intermediate_data(self):
         to_be_deleted_items = [segments_join_intersections, leg_type_points, leg_angle_points, near_table, function_class_join, aadt_join]
         for item in to_be_deleted_items:
             arcpy.Delete_management(item)

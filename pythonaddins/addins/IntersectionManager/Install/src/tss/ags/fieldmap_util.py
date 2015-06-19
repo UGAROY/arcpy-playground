@@ -1,5 +1,3 @@
-__author__ = 'yluo'
-
 import arcpy
 
 def keep_fields_fms(input, fields):

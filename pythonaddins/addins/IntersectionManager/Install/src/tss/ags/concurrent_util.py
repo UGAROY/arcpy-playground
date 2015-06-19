@@ -1,7 +1,7 @@
 import arcpy
 import os
 from itertools import combinations
-from tss import build_string_in_sql_expression
+from dao_util import build_string_in_sql_expression
 
 overlap_segments = "in_memory\\overlap_segments"
 active_centerline_sequence_view = "active_centerline_sequence_view"
