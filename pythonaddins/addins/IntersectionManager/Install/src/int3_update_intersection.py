@@ -706,7 +706,8 @@ def update_intersection_route_event(workspace, input_date):
             intersection_id, on_route_id, on_route_measure, on_route_name, at_route_id, at_route_name = uRow[0], uRow[1], uRow[2], uRow[3], uRow[4], uRow[5]
             # Heads up! Need to handle a ESRI bug is calculating the starting measure as some weird number -2.394324e-11
             # Find a more generic way to do this
-            on_route_measure = round(on_route_measure, measure_scale)
+            if on_route_measure:
+                on_route_measure = round(on_route_measure, measure_scale)
             if intersection_id in inter__route__at_route__measure_name_dict and on_route_id in inter__route__at_route__measure_name_dict[intersection_id] and at_route_id in inter__route__at_route__measure_name_dict[intersection_id][on_route_id]:
                 measure_name_dict = inter__route__at_route__measure_name_dict[intersection_id][on_route_id][at_route_id]
                 if measure_name_dict["On_Route_Measure"] == on_route_measure and measure_name_dict["On_Route_Name"] == on_route_name and measure_name_dict["At_Route_Name"] == at_route_name:
