@@ -40,144 +40,152 @@ new_active ---> updated in the scripts for later use
 old_active ---> active records before running this script
 """
 
-def check_intersection_event_updates(workspace, input_date):
-    # Parameter and schema settings
-    client = "Default"
-    parameters = get_default_parameters()
-    schemas = default_schemas.get(client)
+# Parameter and schema settings ----------------------------------------------------------------------------------------
+client = "Default"
+parameters = get_default_parameters()
+schemas = default_schemas.get(client)
 
-    dbtype = parameters.get(client, "dbtype")
+dbtype = parameters.get(client, "dbtype")
+
+# Source Data -----------------------------------------------------------------------------------------
+network = parameters.get(client,"network")
+network_route_id_field = parameters.get(client,"network_route_id_field")
+network_route_name_field = parameters.get(client,"network_route_name_field")
+network_from_date_field = parameters.get(client,"network_from_date_field")
+network_to_date_field = parameters.get(client,"network_to_date_field")
+
+intersection_id_field = schemas.get("intersection_id_field")
+
+intersection_route_on_rid_field = schemas.get("intersection_route_on_rid_field")
+intersection_route_on_rname_field = schemas.get("intersection_route_on_rname_field")
+intersection_route_on_measure_field = schemas.get("intersection_route_on_measure_field")
+intersection_route_at_rid_field = schemas.get("intersection_route_at_rid_field")
+intersection_route_at_rname_field = schemas.get("intersection_route_at_rname_field")
+
+roadway_segment_id_field = schemas.get("roadway_segment_id_field")
+roadway_segment_rid_field = schemas.get("roadway_segment_rid_field")
+roadway_segment_from_meas_field = schemas.get("roadway_segment_from_meas_field")
+roadway_segment_to_meas_field = schemas.get("roadway_segment_to_meas_field")
+
+function_class_event = parameters.get(client,"function_class_event")
+function_class_field = parameters.get(client,"function_class_field")
+function_class_rid_field = parameters.get(client,"function_class_rid_field")
+function_class_from_meas_field = parameters.get(client,"function_class_from_meas_field")
+function_class_to_meas_field = parameters.get(client,"function_class_to_meas_field")
+function_class_from_date_field = parameters.get(client,"function_class_from_date_field")
+function_class_to_date_field = parameters.get(client,"function_class_to_date_field")
+
+aadt_event = parameters.get(client,"aadt_event")
+aadt_field = parameters.get(client,"aadt_field")
+aadt_rid_field = parameters.get(client,"aadt_rid_field")
+aadt_from_meas_field = parameters.get(client,"aadt_from_meas_field")
+aadt_to_meas_field = parameters.get(client,"aadt_to_meas_field")
+aadt_from_date_field = parameters.get(client,"aadt_from_date_field")
+aadt_to_date_field = parameters.get(client,"aadt_to_date_field")
+
+intersection_approach_id_field = schemas.get("intersection_approach_id_field")
+intersection_approach_leg_id_field = schemas.get("intersection_approach_leg_id_field")
+intersection_approach_leg_type_field = schemas.get("intersection_approach_leg_type_field")
+intersection_approach_leg_dir_field = schemas.get("intersection_approach_leg_dir_field")
+intersection_approach_angle_field = schemas.get("intersection_approach_angle_field")
+intersection_approach_beg_inf_field = schemas.get("intersection_approach_beg_inf_field")
+intersection_approach_end_inf_field = schemas.get("intersection_approach_end_inf_field")
+
+from_date_field = schemas.get("from_date_field")
+to_date_field = schemas.get("to_date_field")
+# -----------------------------------------------------------------------------------------------
+
+# Configuration ---------------------------------------------------------------------------------
+search_radius = parameters.get(client, "search_radius")
+measure_scale = int(parameters.get(client, "measure_scale"))
+angle_calculation_distance = extract_number_from_string(parameters.get(client, "angle_calculation_distance"))[0] / 5280
+area_of_influence = extract_number_from_string(parameters.get(client, "area_of_influence"))[0] / 5280
+azumith_zero_direction = parameters.get(client, "azumith_zero_direction")
+#-----------------------------------------------------------------------------------------------
+
+# intermediate data ----------------------------
+current_active_network_layer = "current_active_network_layer"
+previous_active_network_layer = "previous_active_network_layer"
+
+inserted_network_layer = "inserted_network_layer"
+updated_before_network_layer = "updated_before_network_layer"
+updated_after_network_layer = "updated_after_network_layer"
+deleted_network_layer = "deleted_network_layer"
+
+tba_current_network_layer = "tba_current_network_layer"
+tba_current_intersections = "tba_current_intersections"
+current_along_tba_route_inters_layer = "current_along_tba_route_inters_layer"
+new_intersections = "in_memory\\new_intersections"
+new_intersections_layer = "new_intersections_layer"
+real_new_intersections = "in_memory\\real_new_intersections"
+
+tba_previous_network_layer = "tba_previous_network_layer"
+tba_previous_intersections = "tba_previous_intersections"
+previous_along_tba_route_inters_layer = "previous_along_tba_route_inters_layer"
+old_intersections = "in_memory\\old_intersections"
+old_intersections_layer = "old_intersections_layer"
+real_old_intersections = "in_memory\\real_old_intersections"
+
+tbr_intersection_layer = "tbr_intersection_layer"
+new_active_intersection_layer = "new_active_intersection_layer"
+
+# Intersection Route Event
+re_tba_current_intersection_layer = "re_tba_current_intersection_layer"
+re_tba_current_network_layer = "re_tba_current_network_layer"
+new_intersection_route_event = "in_memory\\new_intersection_route_event"
+re_tba_previous_intersection_layer = "re_tba_previous_intersection_layer"
+new_active_intersection_route_event_layer = "new_active_intersection_route_event_layer"
+
+# Roadway Segment Event
+rs_tba_current_network_layer = "rs_tba_current_network_layer"
+rs_tba_current_intersection_layer = "rs_tba_current_intersection_layer"
+new_roadway_segment_event = "in_memory\\new_roadway_segment_event"
+rs_tba_previous_network_layer = "rs_tba_previous_network_layer"
+new_active_roadway_segment_event_layer = "new_active_roadway_segment_event_layer"
+ia_tba_current_segment_event_layer = "ia_tba_current_segment_event_layer"
+
+# Intersection Approach Event
+ia_tba_current_intersection_layer = "ia_tba_current_intersection_layer"
+new_intersection_approach_event = "in_memory\\new_intersection_approach_event"
+ia_tba_previous_intersection_layer = "ia_tba_previous_intersection_layer"
+ia_tba_current_network_layer = "ia_tba_current_network_layer"
+ia_tba_current_intersection_route_event_layer = "ia_tba_current_intersection_route_event_layer"
+
+active_current_function_class_layer = "active_current_function_class_layer"
+active_current_aadt_layer = "active_current_aadt_layer"
+
+created_network_layer = "created_network_layer"
+retired_network_layer = "retired_network_layer"
+
+old_active_intersection_layer = "old_active_intersection_layer"
+old_active_intersection_route_event_layer = "old_active_intersection_route_event_layer"
+old_active_segment_layer = "old_active_segment_layer"
+old_active_intersection_approach_layer = "old_active_intersection_approach_layer"
+
+created_retired_function_class_layer = "created_retired_function_class_layer"
+created_retired_aadt_layer = "created_retired_aadt_layer"
+#-----------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------------
+
+def check_intersection_event_updates(workspace, input_date):
+    # global variables
+    global tba_current_intersections
+
+    # Parameter and schema settings
+    arcpy.env.workspace = workspace
+    arcpy.env.overwriteOutput = True
+    arcpy.env.addOutputsToMap = False
 
     # Read Parameters and User Input -----------------------------------------------------------------------
     last_update_date = format_sql_date(input_date, dbtype)
     # ------------------------------------------------------------------------------------------------------
 
-    arcpy.env.workspace = workspace
-    arcpy.env.overwriteOutput = True
-    arcpy.env.addOutputsToMap = False
-
     # Source Data -----------------------------------------------------------------------------------------
-    network = parameters.get(client,"network")
-    network_route_id_field = parameters.get(client,"network_route_id_field")
-    network_route_name_field = parameters.get(client,"network_route_name_field")
-    network_from_date_field = parameters.get(client,"network_from_date_field")
-    network_to_date_field = parameters.get(client,"network_to_date_field")
-
     intersection_event = os.path.join(workspace,schemas.get("intersection_event"))
-    intersection_id_field = schemas.get("intersection_id_field")
-
     intersection_route_event = os.path.join(workspace,schemas.get("intersection_route_event"))
-    intersection_route_on_rid_field = schemas.get("intersection_route_on_rid_field")
-    intersection_route_on_rname_field = schemas.get("intersection_route_on_rname_field")
-    intersection_route_on_measure_field = schemas.get("intersection_route_on_measure_field")
-    intersection_route_at_rid_field = schemas.get("intersection_route_at_rid_field")
-    intersection_route_at_rname_field = schemas.get("intersection_route_at_rname_field")
-
     roadway_segment_event = os.path.join(workspace,schemas.get("roadway_segment_event"))
-    roadway_segment_id_field = schemas.get("roadway_segment_id_field")
-    roadway_segment_rid_field = schemas.get("roadway_segment_rid_field")
-    roadway_segment_from_meas_field = schemas.get("roadway_segment_from_meas_field")
-    roadway_segment_to_meas_field = schemas.get("roadway_segment_to_meas_field")
-
-    function_class_event = parameters.get(client,"function_class_event")
-    function_class_field = parameters.get(client,"function_class_field")
-    function_class_rid_field = parameters.get(client,"function_class_rid_field")
-    function_class_from_meas_field = parameters.get(client,"function_class_from_meas_field")
-    function_class_to_meas_field = parameters.get(client,"function_class_to_meas_field")
-    function_class_from_date_field = parameters.get(client,"function_class_from_date_field")
-    function_class_to_date_field = parameters.get(client,"function_class_to_date_field")
-
-    aadt_event = parameters.get(client,"aadt_event")
-    aadt_field = parameters.get(client,"aadt_field")
-    aadt_rid_field = parameters.get(client,"aadt_rid_field")
-    aadt_from_meas_field = parameters.get(client,"aadt_from_meas_field")
-    aadt_to_meas_field = parameters.get(client,"aadt_to_meas_field")
-    aadt_from_date_field = parameters.get(client,"aadt_from_date_field")
-    aadt_to_date_field = parameters.get(client,"aadt_to_date_field")
-
     intersection_approach_event = os.path.join(workspace,schemas.get("intersection_approach_event"))
-    intersection_approach_id_field = schemas.get("intersection_approach_id_field")
-    intersection_approach_leg_id_field = schemas.get("intersection_approach_leg_id_field")
-    intersection_approach_leg_type_field = schemas.get("intersection_approach_leg_type_field")
-    intersection_approach_leg_dir_field = schemas.get("intersection_approach_leg_dir_field")
-    intersection_approach_angle_field = schemas.get("intersection_approach_angle_field")
-    intersection_approach_beg_inf_field = schemas.get("intersection_approach_beg_inf_field")
-    intersection_approach_end_inf_field = schemas.get("intersection_approach_end_inf_field")
-
-    from_date_field = schemas.get("from_date_field")
-    to_date_field = schemas.get("to_date_field")
     # -----------------------------------------------------------------------------------------------
-
-    # Configuration ---------------------------------------------------------------------------------
-    search_radius = parameters.get(client, "search_radius")
-    measure_scale = int(parameters.get(client, "measure_scale"))
-    angle_calculation_distance = extract_number_from_string(parameters.get(client, "angle_calculation_distance"))[0] / 5280
-    area_of_influence = extract_number_from_string(parameters.get(client, "area_of_influence"))[0] / 5280
-    azumith_zero_direction = parameters.get(client, "azumith_zero_direction")
-    #-----------------------------------------------------------------------------------------------
-
-    # intermediate data ----------------------------
-    current_active_network_layer = "current_active_network_layer"
-    previous_active_network_layer = "previous_active_network_layer"
-
-    inserted_network_layer = "inserted_network_layer"
-    updated_before_network_layer = "updated_before_network_layer"
-    updated_after_network_layer = "updated_after_network_layer"
-    deleted_network_layer = "deleted_network_layer"
-
-    tba_current_network_layer = "tba_current_network_layer"
-    tba_current_intersections = "tba_current_intersections"
-    current_along_tba_route_inters_layer = "current_along_tba_route_inters_layer"
-    new_intersections = "in_memory\\new_intersections"
-    new_intersections_layer = "new_intersections_layer"
-    real_new_intersections = "in_memory\\real_new_intersections"
-
-    tba_previous_network_layer = "tba_previous_network_layer"
-    tba_previous_intersections = "tba_previous_intersections"
-    previous_along_tba_route_inters_layer = "previous_along_tba_route_inters_layer"
-    old_intersections = "in_memory\\old_intersections"
-    old_intersections_layer = "old_intersections_layer"
-    real_old_intersections = "in_memory\\real_old_intersections"
-
-    tbr_intersection_layer = "tbr_intersection_layer"
-    new_active_intersection_layer = "new_active_intersection_layer"
-
-    # Intersection Route Event
-    re_tba_current_intersection_layer = "re_tba_current_intersection_layer"
-    re_tba_current_network_layer = "re_tba_current_network_layer"
-    new_intersection_route_event = "in_memory\\new_intersection_route_event"
-    re_tba_previous_intersection_layer = "re_tba_previous_intersection_layer"
-    new_active_intersection_route_event_layer = "new_active_intersection_route_event_layer"
-
-    # Roadway Segment Event
-    rs_tba_current_network_layer = "rs_tba_current_network_layer"
-    rs_tba_current_intersection_layer = "rs_tba_current_intersection_layer"
-    new_roadway_segment_event = "in_memory\\new_roadway_segment_event"
-    rs_tba_previous_network_layer = "rs_tba_previous_network_layer"
-    new_active_roadway_segment_event_layer = "new_active_roadway_segment_event_layer"
-    ia_tba_current_segment_event_layer = "ia_tba_current_segment_event_layer"
-
-    # Intersection Approach Event
-    ia_tba_current_intersection_layer = "ia_tba_current_intersection_layer"
-    new_intersection_approach_event = "in_memory\\new_intersection_approach_event"
-    ia_tba_previous_intersection_layer = "ia_tba_previous_intersection_layer"
-    ia_tba_current_network_layer = "ia_tba_current_network_layer"
-    ia_tba_current_intersection_route_event_layer = "ia_tba_current_intersection_route_event_layer"
-
-    active_current_function_class_layer = "active_current_function_class_layer"
-    active_current_aadt_layer = "active_current_aadt_layer"
-
-    created_network_layer = "created_network_layer"
-    retired_network_layer = "retired_network_layer"
-
-    old_active_intersection_layer = "old_active_intersection_layer"
-    old_active_intersection_route_event_layer = "old_active_intersection_route_event_layer"
-    old_active_segment_layer = "old_active_segment_layer"
-    old_active_intersection_approach_layer = "old_active_intersection_approach_layer"
-
-    created_retired_function_class_layer = "created_retired_function_class_layer"
-    created_retired_aadt_layer = "created_retired_aadt_layer"
-    #-----------------------------------------------
 
     # Important parameters-------------------------
     today_date_string = time.strftime('%m/%d/%Y')
@@ -247,143 +255,25 @@ def check_intersection_event_updates(workspace, input_date):
 
 
 def update_intersection_event(workspace, input_date):
-    # Parameter and schema settings
-    client = "Default"
-    parameters = get_default_parameters()
-    schemas = default_schemas.get(client)
+    # global variables
+    global tba_previous_intersections
+    global tba_current_intersections
 
-    dbtype = parameters.get(client, "dbtype")
+    # Parameter and schema settings
+    arcpy.env.workspace = workspace
+    arcpy.env.overwriteOutput = True
+    arcpy.env.addOutputsToMap = False
 
     # Read Parameters and User Input -----------------------------------------------------------------------
     last_update_date = format_sql_date(input_date, dbtype)
     # ------------------------------------------------------------------------------------------------------
 
-    arcpy.env.workspace = workspace
-    arcpy.env.overwriteOutput = True
-    arcpy.env.addOutputsToMap = False
-
     # Source Data -----------------------------------------------------------------------------------------
-    network = parameters.get(client,"network")
-    network_route_id_field = parameters.get(client,"network_route_id_field")
-    network_route_name_field = parameters.get(client,"network_route_name_field")
-    network_from_date_field = parameters.get(client,"network_from_date_field")
-    network_to_date_field = parameters.get(client,"network_to_date_field")
-
     intersection_event = os.path.join(workspace,schemas.get("intersection_event"))
-    intersection_id_field = schemas.get("intersection_id_field")
-
     intersection_route_event = os.path.join(workspace,schemas.get("intersection_route_event"))
-    intersection_route_on_rid_field = schemas.get("intersection_route_on_rid_field")
-    intersection_route_on_rname_field = schemas.get("intersection_route_on_rname_field")
-    intersection_route_on_measure_field = schemas.get("intersection_route_on_measure_field")
-    intersection_route_at_rid_field = schemas.get("intersection_route_at_rid_field")
-    intersection_route_at_rname_field = schemas.get("intersection_route_at_rname_field")
-
     roadway_segment_event = os.path.join(workspace,schemas.get("roadway_segment_event"))
-    roadway_segment_id_field = schemas.get("roadway_segment_id_field")
-    roadway_segment_rid_field = schemas.get("roadway_segment_rid_field")
-    roadway_segment_from_meas_field = schemas.get("roadway_segment_from_meas_field")
-    roadway_segment_to_meas_field = schemas.get("roadway_segment_to_meas_field")
-
-    function_class_event = parameters.get(client,"function_class_event")
-    function_class_field = parameters.get(client,"function_class_field")
-    function_class_rid_field = parameters.get(client,"function_class_rid_field")
-    function_class_from_meas_field = parameters.get(client,"function_class_from_meas_field")
-    function_class_to_meas_field = parameters.get(client,"function_class_to_meas_field")
-    function_class_from_date_field = parameters.get(client,"function_class_from_date_field")
-    function_class_to_date_field = parameters.get(client,"function_class_to_date_field")
-
-    aadt_event = parameters.get(client,"aadt_event")
-    aadt_field = parameters.get(client,"aadt_field")
-    aadt_rid_field = parameters.get(client,"aadt_rid_field")
-    aadt_from_meas_field = parameters.get(client,"aadt_from_meas_field")
-    aadt_to_meas_field = parameters.get(client,"aadt_to_meas_field")
-    aadt_from_date_field = parameters.get(client,"aadt_from_date_field")
-    aadt_to_date_field = parameters.get(client,"aadt_to_date_field")
-
     intersection_approach_event = os.path.join(workspace,schemas.get("intersection_approach_event"))
-    intersection_approach_id_field = schemas.get("intersection_approach_id_field")
-    intersection_approach_leg_id_field = schemas.get("intersection_approach_leg_id_field")
-    intersection_approach_leg_type_field = schemas.get("intersection_approach_leg_type_field")
-    intersection_approach_leg_dir_field = schemas.get("intersection_approach_leg_dir_field")
-    intersection_approach_angle_field = schemas.get("intersection_approach_angle_field")
-    intersection_approach_beg_inf_field = schemas.get("intersection_approach_beg_inf_field")
-    intersection_approach_end_inf_field = schemas.get("intersection_approach_end_inf_field")
-
-    from_date_field = schemas.get("from_date_field")
-    to_date_field = schemas.get("to_date_field")
     # -----------------------------------------------------------------------------------------------
-
-    # Configuration ---------------------------------------------------------------------------------
-    search_radius = parameters.get(client, "search_radius")
-    measure_scale = int(parameters.get(client, "measure_scale"))
-    angle_calculation_distance = extract_number_from_string(parameters.get(client, "angle_calculation_distance"))[0] / 5280
-    area_of_influence = extract_number_from_string(parameters.get(client, "area_of_influence"))[0] / 5280
-    azumith_zero_direction = parameters.get(client, "azumith_zero_direction")
-    #-----------------------------------------------------------------------------------------------
-
-    # intermediate data ----------------------------
-    current_active_network_layer = "current_active_network_layer"
-    previous_active_network_layer = "previous_active_network_layer"
-
-    inserted_network_layer = "inserted_network_layer"
-    updated_before_network_layer = "updated_before_network_layer"
-    updated_after_network_layer = "updated_after_network_layer"
-    deleted_network_layer = "deleted_network_layer"
-
-    tba_current_network_layer = "tba_current_network_layer"
-    tba_current_intersections = "tba_current_intersections"
-    current_along_tba_route_inters_layer = "current_along_tba_route_inters_layer"
-    new_intersections = "in_memory\\new_intersections"
-    new_intersections_layer = "new_intersections_layer"
-    real_new_intersections = "in_memory\\real_new_intersections"
-
-    tba_previous_network_layer = "tba_previous_network_layer"
-    tba_previous_intersections = "tba_previous_intersections"
-    previous_along_tba_route_inters_layer = "previous_along_tba_route_inters_layer"
-    old_intersections = "in_memory\\old_intersections"
-    old_intersections_layer = "old_intersections_layer"
-    real_old_intersections = "in_memory\\real_old_intersections"
-
-    tbr_intersection_layer = "tbr_intersection_layer"
-    new_active_intersection_layer = "new_active_intersection_layer"
-
-    # Intersection Route Event
-    re_tba_current_intersection_layer = "re_tba_current_intersection_layer"
-    re_tba_current_network_layer = "re_tba_current_network_layer"
-    new_intersection_route_event = "in_memory\\new_intersection_route_event"
-    re_tba_previous_intersection_layer = "re_tba_previous_intersection_layer"
-    new_active_intersection_route_event_layer = "new_active_intersection_route_event_layer"
-
-    # Roadway Segment Event
-    rs_tba_current_network_layer = "rs_tba_current_network_layer"
-    rs_tba_current_intersection_layer = "rs_tba_current_intersection_layer"
-    new_roadway_segment_event = "in_memory\\new_roadway_segment_event"
-    rs_tba_previous_network_layer = "rs_tba_previous_network_layer"
-    new_active_roadway_segment_event_layer = "new_active_roadway_segment_event_layer"
-    ia_tba_current_segment_event_layer = "ia_tba_current_segment_event_layer"
-
-    # Intersection Approach Event
-    ia_tba_current_intersection_layer = "ia_tba_current_intersection_layer"
-    new_intersection_approach_event = "in_memory\\new_intersection_approach_event"
-    ia_tba_previous_intersection_layer = "ia_tba_previous_intersection_layer"
-    ia_tba_current_network_layer = "ia_tba_current_network_layer"
-    ia_tba_current_intersection_route_event_layer = "ia_tba_current_intersection_route_event_layer"
-
-    active_current_function_class_layer = "active_current_function_class_layer"
-    active_current_aadt_layer = "active_current_aadt_layer"
-
-    created_network_layer = "created_network_layer"
-    retired_network_layer = "retired_network_layer"
-
-    old_active_intersection_layer = "old_active_intersection_layer"
-    old_active_intersection_route_event_layer = "old_active_intersection_route_event_layer"
-    old_active_segment_layer = "old_active_segment_layer"
-    old_active_intersection_approach_layer = "old_active_intersection_approach_layer"
-
-    created_retired_function_class_layer = "created_retired_function_class_layer"
-    created_retired_aadt_layer = "created_retired_aadt_layer"
-    #-----------------------------------------------
 
     # Important parameters-------------------------
     today_date_string = time.strftime('%m/%d/%Y')
@@ -454,7 +344,6 @@ def update_intersection_event(workspace, input_date):
     Update Intersection_Event
     """
     logger.info("Start updating intersection event")
-
     # The tba_current_network should include 1) inserted routes 2) updated after routes 3) routes intersecting inserted routes
     # 4) routes intersecting updated after routes 5) routes intersecting deleted routes
     arcpy.MakeFeatureLayer_management(current_active_network_layer, tba_current_network_layer)
@@ -469,6 +358,7 @@ def update_intersection_event(workspace, input_date):
         intersection_id_field=intersection_id_field,
         search_radius=search_radius
     )
+
     tba_current_intersections = intersection_event_instance_new.detect_intersections()
     arcpy.CopyFeatures_management(tba_current_intersections, new_intersections)
     arcpy.MakeFeatureLayer_management(new_intersections, current_along_tba_route_inters_layer)
@@ -535,142 +425,20 @@ def update_intersection_event(workspace, input_date):
 
 def get_new_intersection_event(workspace,input_date):
     # Parameter and schema settings
-    client = "Default"
-    parameters = get_default_parameters()
-    schemas = default_schemas.get(client)
-
-    dbtype = parameters.get(client, "dbtype")
+    arcpy.env.workspace = workspace
+    arcpy.env.overwriteOutput = True
+    arcpy.env.addOutputsToMap = False
 
     # Read Parameters and User Input -----------------------------------------------------------------------
     last_update_date = format_sql_date(input_date, dbtype)
     # ------------------------------------------------------------------------------------------------------
 
-    arcpy.env.workspace = workspace
-    arcpy.env.overwriteOutput = True
-    arcpy.env.addOutputsToMap = False
-
     # Source Data -----------------------------------------------------------------------------------------
-    network = parameters.get(client,"network")
-    network_route_id_field = parameters.get(client,"network_route_id_field")
-    network_route_name_field = parameters.get(client,"network_route_name_field")
-    network_from_date_field = parameters.get(client,"network_from_date_field")
-    network_to_date_field = parameters.get(client,"network_to_date_field")
-
     intersection_event = os.path.join(workspace,schemas.get("intersection_event"))
-    intersection_id_field = schemas.get("intersection_id_field")
-
     intersection_route_event = os.path.join(workspace,schemas.get("intersection_route_event"))
-    intersection_route_on_rid_field = schemas.get("intersection_route_on_rid_field")
-    intersection_route_on_rname_field = schemas.get("intersection_route_on_rname_field")
-    intersection_route_on_measure_field = schemas.get("intersection_route_on_measure_field")
-    intersection_route_at_rid_field = schemas.get("intersection_route_at_rid_field")
-    intersection_route_at_rname_field = schemas.get("intersection_route_at_rname_field")
-
     roadway_segment_event = os.path.join(workspace,schemas.get("roadway_segment_event"))
-    roadway_segment_id_field = schemas.get("roadway_segment_id_field")
-    roadway_segment_rid_field = schemas.get("roadway_segment_rid_field")
-    roadway_segment_from_meas_field = schemas.get("roadway_segment_from_meas_field")
-    roadway_segment_to_meas_field = schemas.get("roadway_segment_to_meas_field")
-
-    function_class_event = parameters.get(client,"function_class_event")
-    function_class_field = parameters.get(client,"function_class_field")
-    function_class_rid_field = parameters.get(client,"function_class_rid_field")
-    function_class_from_meas_field = parameters.get(client,"function_class_from_meas_field")
-    function_class_to_meas_field = parameters.get(client,"function_class_to_meas_field")
-    function_class_from_date_field = parameters.get(client,"function_class_from_date_field")
-    function_class_to_date_field = parameters.get(client,"function_class_to_date_field")
-
-    aadt_event = parameters.get(client,"aadt_event")
-    aadt_field = parameters.get(client,"aadt_field")
-    aadt_rid_field = parameters.get(client,"aadt_rid_field")
-    aadt_from_meas_field = parameters.get(client,"aadt_from_meas_field")
-    aadt_to_meas_field = parameters.get(client,"aadt_to_meas_field")
-    aadt_from_date_field = parameters.get(client,"aadt_from_date_field")
-    aadt_to_date_field = parameters.get(client,"aadt_to_date_field")
-
     intersection_approach_event = os.path.join(workspace,schemas.get("intersection_approach_event"))
-    intersection_approach_id_field = schemas.get("intersection_approach_id_field")
-    intersection_approach_leg_id_field = schemas.get("intersection_approach_leg_id_field")
-    intersection_approach_leg_type_field = schemas.get("intersection_approach_leg_type_field")
-    intersection_approach_leg_dir_field = schemas.get("intersection_approach_leg_dir_field")
-    intersection_approach_angle_field = schemas.get("intersection_approach_angle_field")
-    intersection_approach_beg_inf_field = schemas.get("intersection_approach_beg_inf_field")
-    intersection_approach_end_inf_field = schemas.get("intersection_approach_end_inf_field")
-
-    from_date_field = schemas.get("from_date_field")
-    to_date_field = schemas.get("to_date_field")
     # -----------------------------------------------------------------------------------------------
-
-    # Configuration ---------------------------------------------------------------------------------
-    search_radius = parameters.get(client, "search_radius")
-    measure_scale = int(parameters.get(client, "measure_scale"))
-    angle_calculation_distance = extract_number_from_string(parameters.get(client, "angle_calculation_distance"))[0] / 5280
-    area_of_influence = extract_number_from_string(parameters.get(client, "area_of_influence"))[0] / 5280
-    azumith_zero_direction = parameters.get(client, "azumith_zero_direction")
-    #-----------------------------------------------------------------------------------------------
-
-    # intermediate data ----------------------------
-    current_active_network_layer = "current_active_network_layer"
-    previous_active_network_layer = "previous_active_network_layer"
-
-    inserted_network_layer = "inserted_network_layer"
-    updated_before_network_layer = "updated_before_network_layer"
-    updated_after_network_layer = "updated_after_network_layer"
-    deleted_network_layer = "deleted_network_layer"
-
-    tba_current_network_layer = "tba_current_network_layer"
-    tba_current_intersections = "tba_current_intersections"
-    current_along_tba_route_inters_layer = "current_along_tba_route_inters_layer"
-    new_intersections = "in_memory\\new_intersections"
-    new_intersections_layer = "new_intersections_layer"
-    real_new_intersections = "in_memory\\real_new_intersections"
-
-    tba_previous_network_layer = "tba_previous_network_layer"
-    tba_previous_intersections = "tba_previous_intersections"
-    previous_along_tba_route_inters_layer = "previous_along_tba_route_inters_layer"
-    old_intersections = "in_memory\\old_intersections"
-    old_intersections_layer = "old_intersections_layer"
-    real_old_intersections = "in_memory\\real_old_intersections"
-
-    tbr_intersection_layer = "tbr_intersection_layer"
-    new_active_intersection_layer = "new_active_intersection_layer"
-
-    # Intersection Route Event
-    re_tba_current_intersection_layer = "re_tba_current_intersection_layer"
-    re_tba_current_network_layer = "re_tba_current_network_layer"
-    new_intersection_route_event = "in_memory\\new_intersection_route_event"
-    re_tba_previous_intersection_layer = "re_tba_previous_intersection_layer"
-    new_active_intersection_route_event_layer = "new_active_intersection_route_event_layer"
-
-    # Roadway Segment Event
-    rs_tba_current_network_layer = "rs_tba_current_network_layer"
-    rs_tba_current_intersection_layer = "rs_tba_current_intersection_layer"
-    new_roadway_segment_event = "in_memory\\new_roadway_segment_event"
-    rs_tba_previous_network_layer = "rs_tba_previous_network_layer"
-    new_active_roadway_segment_event_layer = "new_active_roadway_segment_event_layer"
-    ia_tba_current_segment_event_layer = "ia_tba_current_segment_event_layer"
-
-    # Intersection Approach Event
-    ia_tba_current_intersection_layer = "ia_tba_current_intersection_layer"
-    new_intersection_approach_event = "in_memory\\new_intersection_approach_event"
-    ia_tba_previous_intersection_layer = "ia_tba_previous_intersection_layer"
-    ia_tba_current_network_layer = "ia_tba_current_network_layer"
-    ia_tba_current_intersection_route_event_layer = "ia_tba_current_intersection_route_event_layer"
-
-    active_current_function_class_layer = "active_current_function_class_layer"
-    active_current_aadt_layer = "active_current_aadt_layer"
-
-    created_network_layer = "created_network_layer"
-    retired_network_layer = "retired_network_layer"
-
-    old_active_intersection_layer = "old_active_intersection_layer"
-    old_active_intersection_route_event_layer = "old_active_intersection_route_event_layer"
-    old_active_segment_layer = "old_active_segment_layer"
-    old_active_intersection_approach_layer = "old_active_intersection_approach_layer"
-
-    created_retired_function_class_layer = "created_retired_function_class_layer"
-    created_retired_aadt_layer = "created_retired_aadt_layer"
-    #-----------------------------------------------
 
     # Important parameters-------------------------
     today_date_string = time.strftime('%m/%d/%Y')
@@ -762,160 +530,13 @@ def get_new_intersection_event(workspace,input_date):
 
 def update_new_intersection_id(workspace,input_date, updated_intersections):
     # Parameter and schema settings
-    client = "Default"
-    parameters = get_default_parameters()
-    schemas = default_schemas.get(client)
-
-    dbtype = parameters.get(client, "dbtype")
-
-    # Read Parameters and User Input -----------------------------------------------------------------------
-    last_update_date = format_sql_date(input_date, dbtype)
-    # ------------------------------------------------------------------------------------------------------
-
     arcpy.env.workspace = workspace
     arcpy.env.overwriteOutput = True
     arcpy.env.addOutputsToMap = False
 
     # Source Data -----------------------------------------------------------------------------------------
-    network = parameters.get(client,"network")
-    network_route_id_field = parameters.get(client,"network_route_id_field")
-    network_route_name_field = parameters.get(client,"network_route_name_field")
-    network_from_date_field = parameters.get(client,"network_from_date_field")
-    network_to_date_field = parameters.get(client,"network_to_date_field")
-
     intersection_event = os.path.join(workspace,schemas.get("intersection_event"))
-    intersection_id_field = schemas.get("intersection_id_field")
-
-    intersection_route_event = os.path.join(workspace,schemas.get("intersection_route_event"))
-    intersection_route_on_rid_field = schemas.get("intersection_route_on_rid_field")
-    intersection_route_on_rname_field = schemas.get("intersection_route_on_rname_field")
-    intersection_route_on_measure_field = schemas.get("intersection_route_on_measure_field")
-    intersection_route_at_rid_field = schemas.get("intersection_route_at_rid_field")
-    intersection_route_at_rname_field = schemas.get("intersection_route_at_rname_field")
-
-    roadway_segment_event = os.path.join(workspace,schemas.get("roadway_segment_event"))
-    roadway_segment_id_field = schemas.get("roadway_segment_id_field")
-    roadway_segment_rid_field = schemas.get("roadway_segment_rid_field")
-    roadway_segment_from_meas_field = schemas.get("roadway_segment_from_meas_field")
-    roadway_segment_to_meas_field = schemas.get("roadway_segment_to_meas_field")
-
-    function_class_event = parameters.get(client,"function_class_event")
-    function_class_field = parameters.get(client,"function_class_field")
-    function_class_rid_field = parameters.get(client,"function_class_rid_field")
-    function_class_from_meas_field = parameters.get(client,"function_class_from_meas_field")
-    function_class_to_meas_field = parameters.get(client,"function_class_to_meas_field")
-    function_class_from_date_field = parameters.get(client,"function_class_from_date_field")
-    function_class_to_date_field = parameters.get(client,"function_class_to_date_field")
-
-    aadt_event = parameters.get(client,"aadt_event")
-    aadt_field = parameters.get(client,"aadt_field")
-    aadt_rid_field = parameters.get(client,"aadt_rid_field")
-    aadt_from_meas_field = parameters.get(client,"aadt_from_meas_field")
-    aadt_to_meas_field = parameters.get(client,"aadt_to_meas_field")
-    aadt_from_date_field = parameters.get(client,"aadt_from_date_field")
-    aadt_to_date_field = parameters.get(client,"aadt_to_date_field")
-
-    intersection_approach_event = os.path.join(workspace,schemas.get("intersection_approach_event"))
-    intersection_approach_id_field = schemas.get("intersection_approach_id_field")
-    intersection_approach_leg_id_field = schemas.get("intersection_approach_leg_id_field")
-    intersection_approach_leg_type_field = schemas.get("intersection_approach_leg_type_field")
-    intersection_approach_leg_dir_field = schemas.get("intersection_approach_leg_dir_field")
-    intersection_approach_angle_field = schemas.get("intersection_approach_angle_field")
-    intersection_approach_beg_inf_field = schemas.get("intersection_approach_beg_inf_field")
-    intersection_approach_end_inf_field = schemas.get("intersection_approach_end_inf_field")
-
-    from_date_field = schemas.get("from_date_field")
-    to_date_field = schemas.get("to_date_field")
     # -----------------------------------------------------------------------------------------------
-
-    # Configuration ---------------------------------------------------------------------------------
-    search_radius = parameters.get(client, "search_radius")
-    measure_scale = int(parameters.get(client, "measure_scale"))
-    angle_calculation_distance = extract_number_from_string(parameters.get(client, "angle_calculation_distance"))[0] / 5280
-    area_of_influence = extract_number_from_string(parameters.get(client, "area_of_influence"))[0] / 5280
-    azumith_zero_direction = parameters.get(client, "azumith_zero_direction")
-    #-----------------------------------------------------------------------------------------------
-
-    # intermediate data ----------------------------
-    current_active_network_layer = "current_active_network_layer"
-    previous_active_network_layer = "previous_active_network_layer"
-
-    inserted_network_layer = "inserted_network_layer"
-    updated_before_network_layer = "updated_before_network_layer"
-    updated_after_network_layer = "updated_after_network_layer"
-    deleted_network_layer = "deleted_network_layer"
-
-    tba_current_network_layer = "tba_current_network_layer"
-    tba_current_intersections = "tba_current_intersections"
-    current_along_tba_route_inters_layer = "current_along_tba_route_inters_layer"
-    new_intersections = "in_memory\\new_intersections"
-    new_intersections_layer = "new_intersections_layer"
-    real_new_intersections = "in_memory\\real_new_intersections"
-
-    tba_previous_network_layer = "tba_previous_network_layer"
-    tba_previous_intersections = "tba_previous_intersections"
-    previous_along_tba_route_inters_layer = "previous_along_tba_route_inters_layer"
-    old_intersections = "in_memory\\old_intersections"
-    old_intersections_layer = "old_intersections_layer"
-    real_old_intersections = "in_memory\\real_old_intersections"
-
-    tbr_intersection_layer = "tbr_intersection_layer"
-    new_active_intersection_layer = "new_active_intersection_layer"
-
-    # Intersection Route Event
-    re_tba_current_intersection_layer = "re_tba_current_intersection_layer"
-    re_tba_current_network_layer = "re_tba_current_network_layer"
-    new_intersection_route_event = "in_memory\\new_intersection_route_event"
-    re_tba_previous_intersection_layer = "re_tba_previous_intersection_layer"
-    new_active_intersection_route_event_layer = "new_active_intersection_route_event_layer"
-
-    # Roadway Segment Event
-    rs_tba_current_network_layer = "rs_tba_current_network_layer"
-    rs_tba_current_intersection_layer = "rs_tba_current_intersection_layer"
-    new_roadway_segment_event = "in_memory\\new_roadway_segment_event"
-    rs_tba_previous_network_layer = "rs_tba_previous_network_layer"
-    new_active_roadway_segment_event_layer = "new_active_roadway_segment_event_layer"
-    ia_tba_current_segment_event_layer = "ia_tba_current_segment_event_layer"
-
-    # Intersection Approach Event
-    ia_tba_current_intersection_layer = "ia_tba_current_intersection_layer"
-    new_intersection_approach_event = "in_memory\\new_intersection_approach_event"
-    ia_tba_previous_intersection_layer = "ia_tba_previous_intersection_layer"
-    ia_tba_current_network_layer = "ia_tba_current_network_layer"
-    ia_tba_current_intersection_route_event_layer = "ia_tba_current_intersection_route_event_layer"
-
-    active_current_function_class_layer = "active_current_function_class_layer"
-    active_current_aadt_layer = "active_current_aadt_layer"
-
-    created_network_layer = "created_network_layer"
-    retired_network_layer = "retired_network_layer"
-
-    old_active_intersection_layer = "old_active_intersection_layer"
-    old_active_intersection_route_event_layer = "old_active_intersection_route_event_layer"
-    old_active_segment_layer = "old_active_segment_layer"
-    old_active_intersection_approach_layer = "old_active_intersection_approach_layer"
-
-    created_retired_function_class_layer = "created_retired_function_class_layer"
-    created_retired_aadt_layer = "created_retired_aadt_layer"
-    #-----------------------------------------------
-
-    # Important parameters-------------------------
-    today_date_string = time.strftime('%m/%d/%Y')
-    current_active_network_string = "({0} is null or {0} <= CURRENT_TIMESTAMP) and ({1} is null or {1} > CURRENT_TIMESTAMP)".format(network_from_date_field, network_to_date_field)
-    previous_active_network_string = "({0} is NULL or {0} <= {2}) AND ({1} is NULL or {1} > {2})".format(network_from_date_field, network_to_date_field, last_update_date)
-    network_created_since_date_string = "%s > %s" % (network_from_date_field, last_update_date)
-    network_retired_since_date_string = "%s > %s" % (network_to_date_field, last_update_date)
-    function_class_created_since_date_string = "%s > %s" % (function_class_from_date_field, last_update_date) if function_class_from_date_field else ""
-    function_class_retired_since_date_string = "%s > %s" % (function_class_to_date_field, last_update_date) if function_class_to_date_field else ""
-    aadt_created_since_date_string = "%s > %s" % (aadt_from_date_field, last_update_date) if aadt_from_date_field else ""
-    aadt_retired_since_date_string = "%s > %s" % (aadt_to_date_field, last_update_date) if aadt_to_date_field else ""
-    active_string = "%s is NULL" % to_date_field
-    old_active_string = "({0} is NULL or {0} <= {2}) AND ({1} is NULL or {1} > {2})".format(from_date_field, to_date_field, last_update_date)
-    retired_route_ids = []
-    created_route_ids = []
-    created_retired_function_class_exist = False
-    created_retired_aadt_exist = False
-    #-----------------------------------------------
 
     """
     Apply user assigned new intersection ids
@@ -937,143 +558,24 @@ def update_new_intersection_id(workspace,input_date, updated_intersections):
 
 
 def update_intersection_route_event(workspace, input_date):
-    # Parameter and schema settings
-    client = "Default"
-    parameters = get_default_parameters()
-    schemas = default_schemas.get(client)
+    # global variables
+    global new_intersection_route_event
 
-    dbtype = parameters.get(client, "dbtype")
+    # Parameter and schema settings
+    arcpy.env.workspace = workspace
+    arcpy.env.overwriteOutput = True
+    arcpy.env.addOutputsToMap = False
 
     # Read Parameters and User Input -----------------------------------------------------------------------
     last_update_date = format_sql_date(input_date, dbtype)
     # ------------------------------------------------------------------------------------------------------
 
-    arcpy.env.workspace = workspace
-    arcpy.env.overwriteOutput = True
-    arcpy.env.addOutputsToMap = False
-
     # Source Data -----------------------------------------------------------------------------------------
-    network = parameters.get(client,"network")
-    network_route_id_field = parameters.get(client,"network_route_id_field")
-    network_route_name_field = parameters.get(client,"network_route_name_field")
-    network_from_date_field = parameters.get(client,"network_from_date_field")
-    network_to_date_field = parameters.get(client,"network_to_date_field")
-
     intersection_event = os.path.join(workspace,schemas.get("intersection_event"))
-    intersection_id_field = schemas.get("intersection_id_field")
-
     intersection_route_event = os.path.join(workspace,schemas.get("intersection_route_event"))
-    intersection_route_on_rid_field = schemas.get("intersection_route_on_rid_field")
-    intersection_route_on_rname_field = schemas.get("intersection_route_on_rname_field")
-    intersection_route_on_measure_field = schemas.get("intersection_route_on_measure_field")
-    intersection_route_at_rid_field = schemas.get("intersection_route_at_rid_field")
-    intersection_route_at_rname_field = schemas.get("intersection_route_at_rname_field")
-
     roadway_segment_event = os.path.join(workspace,schemas.get("roadway_segment_event"))
-    roadway_segment_id_field = schemas.get("roadway_segment_id_field")
-    roadway_segment_rid_field = schemas.get("roadway_segment_rid_field")
-    roadway_segment_from_meas_field = schemas.get("roadway_segment_from_meas_field")
-    roadway_segment_to_meas_field = schemas.get("roadway_segment_to_meas_field")
-
-    function_class_event = parameters.get(client,"function_class_event")
-    function_class_field = parameters.get(client,"function_class_field")
-    function_class_rid_field = parameters.get(client,"function_class_rid_field")
-    function_class_from_meas_field = parameters.get(client,"function_class_from_meas_field")
-    function_class_to_meas_field = parameters.get(client,"function_class_to_meas_field")
-    function_class_from_date_field = parameters.get(client,"function_class_from_date_field")
-    function_class_to_date_field = parameters.get(client,"function_class_to_date_field")
-
-    aadt_event = parameters.get(client,"aadt_event")
-    aadt_field = parameters.get(client,"aadt_field")
-    aadt_rid_field = parameters.get(client,"aadt_rid_field")
-    aadt_from_meas_field = parameters.get(client,"aadt_from_meas_field")
-    aadt_to_meas_field = parameters.get(client,"aadt_to_meas_field")
-    aadt_from_date_field = parameters.get(client,"aadt_from_date_field")
-    aadt_to_date_field = parameters.get(client,"aadt_to_date_field")
-
     intersection_approach_event = os.path.join(workspace,schemas.get("intersection_approach_event"))
-    intersection_approach_id_field = schemas.get("intersection_approach_id_field")
-    intersection_approach_leg_id_field = schemas.get("intersection_approach_leg_id_field")
-    intersection_approach_leg_type_field = schemas.get("intersection_approach_leg_type_field")
-    intersection_approach_leg_dir_field = schemas.get("intersection_approach_leg_dir_field")
-    intersection_approach_angle_field = schemas.get("intersection_approach_angle_field")
-    intersection_approach_beg_inf_field = schemas.get("intersection_approach_beg_inf_field")
-    intersection_approach_end_inf_field = schemas.get("intersection_approach_end_inf_field")
-
-    from_date_field = schemas.get("from_date_field")
-    to_date_field = schemas.get("to_date_field")
     # -----------------------------------------------------------------------------------------------
-
-    # Configuration ---------------------------------------------------------------------------------
-    search_radius = parameters.get(client, "search_radius")
-    measure_scale = int(parameters.get(client, "measure_scale"))
-    angle_calculation_distance = extract_number_from_string(parameters.get(client, "angle_calculation_distance"))[0] / 5280
-    area_of_influence = extract_number_from_string(parameters.get(client, "area_of_influence"))[0] / 5280
-    azumith_zero_direction = parameters.get(client, "azumith_zero_direction")
-    #-----------------------------------------------------------------------------------------------
-
-    # intermediate data ----------------------------
-    current_active_network_layer = "current_active_network_layer"
-    previous_active_network_layer = "previous_active_network_layer"
-
-    inserted_network_layer = "inserted_network_layer"
-    updated_before_network_layer = "updated_before_network_layer"
-    updated_after_network_layer = "updated_after_network_layer"
-    deleted_network_layer = "deleted_network_layer"
-
-    tba_current_network_layer = "tba_current_network_layer"
-    tba_current_intersections = "tba_current_intersections"
-    current_along_tba_route_inters_layer = "current_along_tba_route_inters_layer"
-    new_intersections = "in_memory\\new_intersections"
-    new_intersections_layer = "new_intersections_layer"
-    real_new_intersections = "in_memory\\real_new_intersections"
-
-    tba_previous_network_layer = "tba_previous_network_layer"
-    tba_previous_intersections = "tba_previous_intersections"
-    previous_along_tba_route_inters_layer = "previous_along_tba_route_inters_layer"
-    old_intersections = "in_memory\\old_intersections"
-    old_intersections_layer = "old_intersections_layer"
-    real_old_intersections = "in_memory\\real_old_intersections"
-
-    tbr_intersection_layer = "tbr_intersection_layer"
-    new_active_intersection_layer = "new_active_intersection_layer"
-
-    # Intersection Route Event
-    re_tba_current_intersection_layer = "re_tba_current_intersection_layer"
-    re_tba_current_network_layer = "re_tba_current_network_layer"
-    new_intersection_route_event = "in_memory\\new_intersection_route_event"
-    re_tba_previous_intersection_layer = "re_tba_previous_intersection_layer"
-    new_active_intersection_route_event_layer = "new_active_intersection_route_event_layer"
-
-    # Roadway Segment Event
-    rs_tba_current_network_layer = "rs_tba_current_network_layer"
-    rs_tba_current_intersection_layer = "rs_tba_current_intersection_layer"
-    new_roadway_segment_event = "in_memory\\new_roadway_segment_event"
-    rs_tba_previous_network_layer = "rs_tba_previous_network_layer"
-    new_active_roadway_segment_event_layer = "new_active_roadway_segment_event_layer"
-    ia_tba_current_segment_event_layer = "ia_tba_current_segment_event_layer"
-
-    # Intersection Approach Event
-    ia_tba_current_intersection_layer = "ia_tba_current_intersection_layer"
-    new_intersection_approach_event = "in_memory\\new_intersection_approach_event"
-    ia_tba_previous_intersection_layer = "ia_tba_previous_intersection_layer"
-    ia_tba_current_network_layer = "ia_tba_current_network_layer"
-    ia_tba_current_intersection_route_event_layer = "ia_tba_current_intersection_route_event_layer"
-
-    active_current_function_class_layer = "active_current_function_class_layer"
-    active_current_aadt_layer = "active_current_aadt_layer"
-
-    created_network_layer = "created_network_layer"
-    retired_network_layer = "retired_network_layer"
-
-    old_active_intersection_layer = "old_active_intersection_layer"
-    old_active_intersection_route_event_layer = "old_active_intersection_route_event_layer"
-    old_active_segment_layer = "old_active_segment_layer"
-    old_active_intersection_approach_layer = "old_active_intersection_approach_layer"
-
-    created_retired_function_class_layer = "created_retired_function_class_layer"
-    created_retired_aadt_layer = "created_retired_aadt_layer"
-    #-----------------------------------------------
 
     # Important parameters-------------------------
     today_date_string = time.strftime('%m/%d/%Y')
@@ -1105,6 +607,28 @@ def update_intersection_route_event(workspace, input_date):
     arcpy.MakeFeatureLayer_management(network, previous_active_network_layer, previous_active_network_string)
     # Create current network layer
     arcpy.MakeFeatureLayer_management(network, current_active_network_layer, current_active_network_string)
+
+    # Create created network layer since the last_update_date and get a list created route ids
+    arcpy.MakeFeatureLayer_management(network, created_network_layer, network_created_since_date_string)
+    with arcpy.da.SearchCursor(created_network_layer, [network_route_id_field]) as sCursor:
+        for sRow in sCursor:
+            route_id = sRow[0]
+            if route_id not in created_route_ids:
+                created_route_ids.append(route_id)
+    # Create retired network layer and the retired route ids.
+    arcpy.MakeFeatureLayer_management(network, retired_network_layer, network_retired_since_date_string)
+    with arcpy.da.SearchCursor(retired_network_layer, [network_route_id_field]) as sCursor:
+        for sRow in sCursor:
+            route_id = sRow[0]
+            if route_id not in retired_route_ids:
+                retired_route_ids.append(route_id)
+    # Get the updated and retired route ids based on the updated functional class and aadt
+    if function_class_from_date_field and function_class_to_date_field:
+        if subset_data_exist(function_class_event, "%s or %s" % (function_class_created_since_date_string, function_class_retired_since_date_string)):
+            created_retired_function_class_exist = True
+    if aadt_from_date_field and aadt_from_date_field:
+        if subset_data_exist(aadt_event, "%s or %s" % (aadt_created_since_date_string, aadt_retired_since_date_string)):
+            created_retired_aadt_exist = True
 
     #Created network at all states ----------------------------------------------------------------------------------------------
     inserted_route_ids = list(set(created_route_ids) - set(retired_route_ids))
@@ -1216,143 +740,24 @@ def update_intersection_route_event(workspace, input_date):
 
 
 def update_roadway_segment_event(workspace, input_date):
-    # Parameter and schema settings
-    client = "Default"
-    parameters = get_default_parameters()
-    schemas = default_schemas.get(client)
+    # global variables
+    global new_roadway_segment_event
 
-    dbtype = parameters.get(client, "dbtype")
+    # Parameter and schema settings
+    arcpy.env.workspace = workspace
+    arcpy.env.overwriteOutput = True
+    arcpy.env.addOutputsToMap = False
 
     # Read Parameters and User Input -----------------------------------------------------------------------
     last_update_date = format_sql_date(input_date, dbtype)
     # ------------------------------------------------------------------------------------------------------
 
-    arcpy.env.workspace = workspace
-    arcpy.env.overwriteOutput = True
-    arcpy.env.addOutputsToMap = False
-
     # Source Data -----------------------------------------------------------------------------------------
-    network = parameters.get(client,"network")
-    network_route_id_field = parameters.get(client,"network_route_id_field")
-    network_route_name_field = parameters.get(client,"network_route_name_field")
-    network_from_date_field = parameters.get(client,"network_from_date_field")
-    network_to_date_field = parameters.get(client,"network_to_date_field")
-
     intersection_event = os.path.join(workspace,schemas.get("intersection_event"))
-    intersection_id_field = schemas.get("intersection_id_field")
-
     intersection_route_event = os.path.join(workspace,schemas.get("intersection_route_event"))
-    intersection_route_on_rid_field = schemas.get("intersection_route_on_rid_field")
-    intersection_route_on_rname_field = schemas.get("intersection_route_on_rname_field")
-    intersection_route_on_measure_field = schemas.get("intersection_route_on_measure_field")
-    intersection_route_at_rid_field = schemas.get("intersection_route_at_rid_field")
-    intersection_route_at_rname_field = schemas.get("intersection_route_at_rname_field")
-
     roadway_segment_event = os.path.join(workspace,schemas.get("roadway_segment_event"))
-    roadway_segment_id_field = schemas.get("roadway_segment_id_field")
-    roadway_segment_rid_field = schemas.get("roadway_segment_rid_field")
-    roadway_segment_from_meas_field = schemas.get("roadway_segment_from_meas_field")
-    roadway_segment_to_meas_field = schemas.get("roadway_segment_to_meas_field")
-
-    function_class_event = parameters.get(client,"function_class_event")
-    function_class_field = parameters.get(client,"function_class_field")
-    function_class_rid_field = parameters.get(client,"function_class_rid_field")
-    function_class_from_meas_field = parameters.get(client,"function_class_from_meas_field")
-    function_class_to_meas_field = parameters.get(client,"function_class_to_meas_field")
-    function_class_from_date_field = parameters.get(client,"function_class_from_date_field")
-    function_class_to_date_field = parameters.get(client,"function_class_to_date_field")
-
-    aadt_event = parameters.get(client,"aadt_event")
-    aadt_field = parameters.get(client,"aadt_field")
-    aadt_rid_field = parameters.get(client,"aadt_rid_field")
-    aadt_from_meas_field = parameters.get(client,"aadt_from_meas_field")
-    aadt_to_meas_field = parameters.get(client,"aadt_to_meas_field")
-    aadt_from_date_field = parameters.get(client,"aadt_from_date_field")
-    aadt_to_date_field = parameters.get(client,"aadt_to_date_field")
-
     intersection_approach_event = os.path.join(workspace,schemas.get("intersection_approach_event"))
-    intersection_approach_id_field = schemas.get("intersection_approach_id_field")
-    intersection_approach_leg_id_field = schemas.get("intersection_approach_leg_id_field")
-    intersection_approach_leg_type_field = schemas.get("intersection_approach_leg_type_field")
-    intersection_approach_leg_dir_field = schemas.get("intersection_approach_leg_dir_field")
-    intersection_approach_angle_field = schemas.get("intersection_approach_angle_field")
-    intersection_approach_beg_inf_field = schemas.get("intersection_approach_beg_inf_field")
-    intersection_approach_end_inf_field = schemas.get("intersection_approach_end_inf_field")
-
-    from_date_field = schemas.get("from_date_field")
-    to_date_field = schemas.get("to_date_field")
     # -----------------------------------------------------------------------------------------------
-
-    # Configuration ---------------------------------------------------------------------------------
-    search_radius = parameters.get(client, "search_radius")
-    measure_scale = int(parameters.get(client, "measure_scale"))
-    angle_calculation_distance = extract_number_from_string(parameters.get(client, "angle_calculation_distance"))[0] / 5280
-    area_of_influence = extract_number_from_string(parameters.get(client, "area_of_influence"))[0] / 5280
-    azumith_zero_direction = parameters.get(client, "azumith_zero_direction")
-    #-----------------------------------------------------------------------------------------------
-
-    # intermediate data ----------------------------
-    current_active_network_layer = "current_active_network_layer"
-    previous_active_network_layer = "previous_active_network_layer"
-
-    inserted_network_layer = "inserted_network_layer"
-    updated_before_network_layer = "updated_before_network_layer"
-    updated_after_network_layer = "updated_after_network_layer"
-    deleted_network_layer = "deleted_network_layer"
-
-    tba_current_network_layer = "tba_current_network_layer"
-    tba_current_intersections = "tba_current_intersections"
-    current_along_tba_route_inters_layer = "current_along_tba_route_inters_layer"
-    new_intersections = "in_memory\\new_intersections"
-    new_intersections_layer = "new_intersections_layer"
-    real_new_intersections = "in_memory\\real_new_intersections"
-
-    tba_previous_network_layer = "tba_previous_network_layer"
-    tba_previous_intersections = "tba_previous_intersections"
-    previous_along_tba_route_inters_layer = "previous_along_tba_route_inters_layer"
-    old_intersections = "in_memory\\old_intersections"
-    old_intersections_layer = "old_intersections_layer"
-    real_old_intersections = "in_memory\\real_old_intersections"
-
-    tbr_intersection_layer = "tbr_intersection_layer"
-    new_active_intersection_layer = "new_active_intersection_layer"
-
-    # Intersection Route Event
-    re_tba_current_intersection_layer = "re_tba_current_intersection_layer"
-    re_tba_current_network_layer = "re_tba_current_network_layer"
-    new_intersection_route_event = "in_memory\\new_intersection_route_event"
-    re_tba_previous_intersection_layer = "re_tba_previous_intersection_layer"
-    new_active_intersection_route_event_layer = "new_active_intersection_route_event_layer"
-
-    # Roadway Segment Event
-    rs_tba_current_network_layer = "rs_tba_current_network_layer"
-    rs_tba_current_intersection_layer = "rs_tba_current_intersection_layer"
-    new_roadway_segment_event = "in_memory\\new_roadway_segment_event"
-    rs_tba_previous_network_layer = "rs_tba_previous_network_layer"
-    new_active_roadway_segment_event_layer = "new_active_roadway_segment_event_layer"
-    ia_tba_current_segment_event_layer = "ia_tba_current_segment_event_layer"
-
-    # Intersection Approach Event
-    ia_tba_current_intersection_layer = "ia_tba_current_intersection_layer"
-    new_intersection_approach_event = "in_memory\\new_intersection_approach_event"
-    ia_tba_previous_intersection_layer = "ia_tba_previous_intersection_layer"
-    ia_tba_current_network_layer = "ia_tba_current_network_layer"
-    ia_tba_current_intersection_route_event_layer = "ia_tba_current_intersection_route_event_layer"
-
-    active_current_function_class_layer = "active_current_function_class_layer"
-    active_current_aadt_layer = "active_current_aadt_layer"
-
-    created_network_layer = "created_network_layer"
-    retired_network_layer = "retired_network_layer"
-
-    old_active_intersection_layer = "old_active_intersection_layer"
-    old_active_intersection_route_event_layer = "old_active_intersection_route_event_layer"
-    old_active_segment_layer = "old_active_segment_layer"
-    old_active_intersection_approach_layer = "old_active_intersection_approach_layer"
-
-    created_retired_function_class_layer = "created_retired_function_class_layer"
-    created_retired_aadt_layer = "created_retired_aadt_layer"
-    #-----------------------------------------------
 
     # Important parameters-------------------------
     today_date_string = time.strftime('%m/%d/%Y')
@@ -1385,14 +790,36 @@ def update_roadway_segment_event(workspace, input_date):
     # Create current network layer
     arcpy.MakeFeatureLayer_management(network, current_active_network_layer, current_active_network_string)
 
+    # Create created network layer since the last_update_date and get a list created route ids
+    arcpy.MakeFeatureLayer_management(network, created_network_layer, network_created_since_date_string)
+    with arcpy.da.SearchCursor(created_network_layer, [network_route_id_field]) as sCursor:
+        for sRow in sCursor:
+            route_id = sRow[0]
+            if route_id not in created_route_ids:
+                created_route_ids.append(route_id)
+    # Create retired network layer and the retired route ids.
+    arcpy.MakeFeatureLayer_management(network, retired_network_layer, network_retired_since_date_string)
+    with arcpy.da.SearchCursor(retired_network_layer, [network_route_id_field]) as sCursor:
+        for sRow in sCursor:
+            route_id = sRow[0]
+            if route_id not in retired_route_ids:
+                retired_route_ids.append(route_id)
+    # Get the updated and retired route ids based on the updated functional class and aadt
+    if function_class_from_date_field and function_class_to_date_field:
+        if subset_data_exist(function_class_event, "%s or %s" % (function_class_created_since_date_string, function_class_retired_since_date_string)):
+            created_retired_function_class_exist = True
+    if aadt_from_date_field and aadt_from_date_field:
+        if subset_data_exist(aadt_event, "%s or %s" % (aadt_created_since_date_string, aadt_retired_since_date_string)):
+            created_retired_aadt_exist = True
+
     #Created network at all states ----------------------------------------------------------------------------------------------
     inserted_route_ids = list(set(created_route_ids) - set(retired_route_ids))
     updated_route_ids = list(set(created_route_ids) & set(retired_route_ids))
     deleted_route_ids = list(set(retired_route_ids) - set(created_route_ids))
-    # arcpy.MakeFeatureLayer_management(current_active_network_layer, inserted_network_layer, build_string_in_sql_expression(network_route_id_field, inserted_route_ids))
-    # arcpy.MakeFeatureLayer_management(current_active_network_layer, updated_after_network_layer, build_string_in_sql_expression(network_route_id_field, updated_route_ids))
-    # arcpy.MakeFeatureLayer_management(previous_active_network_layer, updated_before_network_layer, build_string_in_sql_expression(network_route_id_field, updated_route_ids))
-    # arcpy.MakeFeatureLayer_management(previous_active_network_layer, deleted_network_layer, build_string_in_sql_expression(network_route_id_field, deleted_route_ids))
+    arcpy.MakeFeatureLayer_management(current_active_network_layer, inserted_network_layer, build_string_in_sql_expression(network_route_id_field, inserted_route_ids))
+    arcpy.MakeFeatureLayer_management(current_active_network_layer, updated_after_network_layer, build_string_in_sql_expression(network_route_id_field, updated_route_ids))
+    arcpy.MakeFeatureLayer_management(previous_active_network_layer, updated_before_network_layer, build_string_in_sql_expression(network_route_id_field, updated_route_ids))
+    arcpy.MakeFeatureLayer_management(previous_active_network_layer, deleted_network_layer, build_string_in_sql_expression(network_route_id_field, deleted_route_ids))
     #------------------------------------------------------------------------------------------------------------------------------
 
     """
@@ -1484,143 +911,24 @@ def update_roadway_segment_event(workspace, input_date):
 
 
 def update_intersection_approach_event(workspace, input_date):
-    # Parameter and schema settings
-    client = "Default"
-    parameters = get_default_parameters()
-    schemas = default_schemas.get(client)
+    # global variables
+    global new_intersection_approach_event
 
-    dbtype = parameters.get(client, "dbtype")
+    # Parameter and schema settings
+    arcpy.env.workspace = workspace
+    arcpy.env.overwriteOutput = True
+    arcpy.env.addOutputsToMap = False
 
     # Read Parameters and User Input -----------------------------------------------------------------------
     last_update_date = format_sql_date(input_date, dbtype)
     # ------------------------------------------------------------------------------------------------------
 
-    arcpy.env.workspace = workspace
-    arcpy.env.overwriteOutput = True
-    arcpy.env.addOutputsToMap = False
-
     # Source Data -----------------------------------------------------------------------------------------
-    network = parameters.get(client,"network")
-    network_route_id_field = parameters.get(client,"network_route_id_field")
-    network_route_name_field = parameters.get(client,"network_route_name_field")
-    network_from_date_field = parameters.get(client,"network_from_date_field")
-    network_to_date_field = parameters.get(client,"network_to_date_field")
-
     intersection_event = os.path.join(workspace,schemas.get("intersection_event"))
-    intersection_id_field = schemas.get("intersection_id_field")
-
     intersection_route_event = os.path.join(workspace,schemas.get("intersection_route_event"))
-    intersection_route_on_rid_field = schemas.get("intersection_route_on_rid_field")
-    intersection_route_on_rname_field = schemas.get("intersection_route_on_rname_field")
-    intersection_route_on_measure_field = schemas.get("intersection_route_on_measure_field")
-    intersection_route_at_rid_field = schemas.get("intersection_route_at_rid_field")
-    intersection_route_at_rname_field = schemas.get("intersection_route_at_rname_field")
-
     roadway_segment_event = os.path.join(workspace,schemas.get("roadway_segment_event"))
-    roadway_segment_id_field = schemas.get("roadway_segment_id_field")
-    roadway_segment_rid_field = schemas.get("roadway_segment_rid_field")
-    roadway_segment_from_meas_field = schemas.get("roadway_segment_from_meas_field")
-    roadway_segment_to_meas_field = schemas.get("roadway_segment_to_meas_field")
-
-    function_class_event = parameters.get(client,"function_class_event")
-    function_class_field = parameters.get(client,"function_class_field")
-    function_class_rid_field = parameters.get(client,"function_class_rid_field")
-    function_class_from_meas_field = parameters.get(client,"function_class_from_meas_field")
-    function_class_to_meas_field = parameters.get(client,"function_class_to_meas_field")
-    function_class_from_date_field = parameters.get(client,"function_class_from_date_field")
-    function_class_to_date_field = parameters.get(client,"function_class_to_date_field")
-
-    aadt_event = parameters.get(client,"aadt_event")
-    aadt_field = parameters.get(client,"aadt_field")
-    aadt_rid_field = parameters.get(client,"aadt_rid_field")
-    aadt_from_meas_field = parameters.get(client,"aadt_from_meas_field")
-    aadt_to_meas_field = parameters.get(client,"aadt_to_meas_field")
-    aadt_from_date_field = parameters.get(client,"aadt_from_date_field")
-    aadt_to_date_field = parameters.get(client,"aadt_to_date_field")
-
     intersection_approach_event = os.path.join(workspace,schemas.get("intersection_approach_event"))
-    intersection_approach_id_field = schemas.get("intersection_approach_id_field")
-    intersection_approach_leg_id_field = schemas.get("intersection_approach_leg_id_field")
-    intersection_approach_leg_type_field = schemas.get("intersection_approach_leg_type_field")
-    intersection_approach_leg_dir_field = schemas.get("intersection_approach_leg_dir_field")
-    intersection_approach_angle_field = schemas.get("intersection_approach_angle_field")
-    intersection_approach_beg_inf_field = schemas.get("intersection_approach_beg_inf_field")
-    intersection_approach_end_inf_field = schemas.get("intersection_approach_end_inf_field")
-
-    from_date_field = schemas.get("from_date_field")
-    to_date_field = schemas.get("to_date_field")
     # -----------------------------------------------------------------------------------------------
-
-    # Configuration ---------------------------------------------------------------------------------
-    search_radius = parameters.get(client, "search_radius")
-    measure_scale = int(parameters.get(client, "measure_scale"))
-    angle_calculation_distance = extract_number_from_string(parameters.get(client, "angle_calculation_distance"))[0] / 5280
-    area_of_influence = extract_number_from_string(parameters.get(client, "area_of_influence"))[0] / 5280
-    azumith_zero_direction = parameters.get(client, "azumith_zero_direction")
-    #-----------------------------------------------------------------------------------------------
-
-    # intermediate data ----------------------------
-    current_active_network_layer = "current_active_network_layer"
-    previous_active_network_layer = "previous_active_network_layer"
-
-    inserted_network_layer = "inserted_network_layer"
-    updated_before_network_layer = "updated_before_network_layer"
-    updated_after_network_layer = "updated_after_network_layer"
-    deleted_network_layer = "deleted_network_layer"
-
-    tba_current_network_layer = "tba_current_network_layer"
-    tba_current_intersections = "tba_current_intersections"
-    current_along_tba_route_inters_layer = "current_along_tba_route_inters_layer"
-    new_intersections = "in_memory\\new_intersections"
-    new_intersections_layer = "new_intersections_layer"
-    real_new_intersections = "in_memory\\real_new_intersections"
-
-    tba_previous_network_layer = "tba_previous_network_layer"
-    tba_previous_intersections = "tba_previous_intersections"
-    previous_along_tba_route_inters_layer = "previous_along_tba_route_inters_layer"
-    old_intersections = "in_memory\\old_intersections"
-    old_intersections_layer = "old_intersections_layer"
-    real_old_intersections = "in_memory\\real_old_intersections"
-
-    tbr_intersection_layer = "tbr_intersection_layer"
-    new_active_intersection_layer = "new_active_intersection_layer"
-
-    # Intersection Route Event
-    re_tba_current_intersection_layer = "re_tba_current_intersection_layer"
-    re_tba_current_network_layer = "re_tba_current_network_layer"
-    new_intersection_route_event = "in_memory\\new_intersection_route_event"
-    re_tba_previous_intersection_layer = "re_tba_previous_intersection_layer"
-    new_active_intersection_route_event_layer = "new_active_intersection_route_event_layer"
-
-    # Roadway Segment Event
-    rs_tba_current_network_layer = "rs_tba_current_network_layer"
-    rs_tba_current_intersection_layer = "rs_tba_current_intersection_layer"
-    new_roadway_segment_event = "in_memory\\new_roadway_segment_event"
-    rs_tba_previous_network_layer = "rs_tba_previous_network_layer"
-    new_active_roadway_segment_event_layer = "new_active_roadway_segment_event_layer"
-    ia_tba_current_segment_event_layer = "ia_tba_current_segment_event_layer"
-
-    # Intersection Approach Event
-    ia_tba_current_intersection_layer = "ia_tba_current_intersection_layer"
-    new_intersection_approach_event = "in_memory\\new_intersection_approach_event"
-    ia_tba_previous_intersection_layer = "ia_tba_previous_intersection_layer"
-    ia_tba_current_network_layer = "ia_tba_current_network_layer"
-    ia_tba_current_intersection_route_event_layer = "ia_tba_current_intersection_route_event_layer"
-
-    active_current_function_class_layer = "active_current_function_class_layer"
-    active_current_aadt_layer = "active_current_aadt_layer"
-
-    created_network_layer = "created_network_layer"
-    retired_network_layer = "retired_network_layer"
-
-    old_active_intersection_layer = "old_active_intersection_layer"
-    old_active_intersection_route_event_layer = "old_active_intersection_route_event_layer"
-    old_active_segment_layer = "old_active_segment_layer"
-    old_active_intersection_approach_layer = "old_active_intersection_approach_layer"
-
-    created_retired_function_class_layer = "created_retired_function_class_layer"
-    created_retired_aadt_layer = "created_retired_aadt_layer"
-    #-----------------------------------------------
 
     # Important parameters-------------------------
     today_date_string = time.strftime('%m/%d/%Y')
@@ -1653,14 +961,36 @@ def update_intersection_approach_event(workspace, input_date):
     # Create current network layer
     arcpy.MakeFeatureLayer_management(network, current_active_network_layer, current_active_network_string)
 
+    # Create created network layer since the last_update_date and get a list created route ids
+    arcpy.MakeFeatureLayer_management(network, created_network_layer, network_created_since_date_string)
+    with arcpy.da.SearchCursor(created_network_layer, [network_route_id_field]) as sCursor:
+        for sRow in sCursor:
+            route_id = sRow[0]
+            if route_id not in created_route_ids:
+                created_route_ids.append(route_id)
+    # Create retired network layer and the retired route ids.
+    arcpy.MakeFeatureLayer_management(network, retired_network_layer, network_retired_since_date_string)
+    with arcpy.da.SearchCursor(retired_network_layer, [network_route_id_field]) as sCursor:
+        for sRow in sCursor:
+            route_id = sRow[0]
+            if route_id not in retired_route_ids:
+                retired_route_ids.append(route_id)
+    # Get the updated and retired route ids based on the updated functional class and aadt
+    if function_class_from_date_field and function_class_to_date_field:
+        if subset_data_exist(function_class_event, "%s or %s" % (function_class_created_since_date_string, function_class_retired_since_date_string)):
+            created_retired_function_class_exist = True
+    if aadt_from_date_field and aadt_from_date_field:
+        if subset_data_exist(aadt_event, "%s or %s" % (aadt_created_since_date_string, aadt_retired_since_date_string)):
+            created_retired_aadt_exist = True
+
     #Created network at all states ----------------------------------------------------------------------------------------------
-    # inserted_route_ids = list(set(created_route_ids) - set(retired_route_ids))
-    # updated_route_ids = list(set(created_route_ids) & set(retired_route_ids))
-    # deleted_route_ids = list(set(retired_route_ids) - set(created_route_ids))
-    # arcpy.MakeFeatureLayer_management(current_active_network_layer, inserted_network_layer, build_string_in_sql_expression(network_route_id_field, inserted_route_ids))
-    # arcpy.MakeFeatureLayer_management(current_active_network_layer, updated_after_network_layer, build_string_in_sql_expression(network_route_id_field, updated_route_ids))
-    # arcpy.MakeFeatureLayer_management(previous_active_network_layer, updated_before_network_layer, build_string_in_sql_expression(network_route_id_field, updated_route_ids))
-    # arcpy.MakeFeatureLayer_management(previous_active_network_layer, deleted_network_layer, build_string_in_sql_expression(network_route_id_field, deleted_route_ids))
+    inserted_route_ids = list(set(created_route_ids) - set(retired_route_ids))
+    updated_route_ids = list(set(created_route_ids) & set(retired_route_ids))
+    deleted_route_ids = list(set(retired_route_ids) - set(created_route_ids))
+    arcpy.MakeFeatureLayer_management(current_active_network_layer, inserted_network_layer, build_string_in_sql_expression(network_route_id_field, inserted_route_ids))
+    arcpy.MakeFeatureLayer_management(current_active_network_layer, updated_after_network_layer, build_string_in_sql_expression(network_route_id_field, updated_route_ids))
+    arcpy.MakeFeatureLayer_management(previous_active_network_layer, updated_before_network_layer, build_string_in_sql_expression(network_route_id_field, updated_route_ids))
+    arcpy.MakeFeatureLayer_management(previous_active_network_layer, deleted_network_layer, build_string_in_sql_expression(network_route_id_field, deleted_route_ids))
     #------------------------------------------------------------------------------------------------------------------------------
 
     """
@@ -1712,7 +1042,7 @@ def update_intersection_approach_event(workspace, input_date):
         intersection_route_on_rid_field=intersection_route_on_rid_field,
         intersection_route_on_measure_field=intersection_route_on_measure_field,
 
-        intersection_approach_event=new_intersection_approach_event,
+        intersection_approach_event= new_intersection_approach_event,
         intersection_approach_id_field=intersection_approach_id_field,
         intersection_approach_leg_id_field=intersection_approach_leg_id_field,
         intersection_approach_leg_type_field=intersection_approach_leg_type_field,

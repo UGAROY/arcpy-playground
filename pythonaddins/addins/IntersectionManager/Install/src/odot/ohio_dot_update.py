@@ -16,6 +16,7 @@ def custom_update_odot(workspace, date):
     """
     arcpy.env.workspace = workspace
     arcpy.env.overwriteOutput = True
+    arcpy.env.addOutputsToMap = False
 
     client = "Default"
     parameters = get_default_parameters()
