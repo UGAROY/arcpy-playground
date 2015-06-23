@@ -1,13 +1,31 @@
 import arcpy
 
 def build_numeric_in_sql_expression(field_name, value_list):
+    """
+    Build a "in" sql string based on the input field name and value list
+    :param field_name:
+    :param value_list:
+    :return:
+    """
     return "%s in (%s)" % (field_name, ",".join(str(value) for value in value_list)) if len(value_list) > 0 else "1=2"
 
 
 def build_string_in_sql_expression(field_name, value_list):
+    """
+    Build a "in" sql string based on the input field name and value list
+    :param field_name:
+    :param value_list:
+    :return:
+    """
     return "%s in (%s)" % (field_name, ",".join("'" + value + "'" for value in value_list)) if len(value_list) > 0 else "1=2"
 
 def subset_data_exist(data, where_clause):
+    """
+    Check if data exists with the input where clause
+    :param data:
+    :param where_clause:
+    :return:
+    """
     with arcpy.da.SearchCursor(data, "OID@", where_clause) as sCursor:
         try:
             sCursor.next()
@@ -16,11 +34,23 @@ def subset_data_exist(data, where_clause):
             return False
 
 def delete_subset_data(data, where_clause):
+    """
+    Delete the records that meets the where clause
+    :param data:
+    :param where_clause:
+    """
     with arcpy.da.UpdateCursor(data, "OID@", where_clause) as uCursor:
         for uRow in uCursor:
             uCursor.deleteRow()
 
 def delete_identical_only_keep_min_oid(data, fields, xy_tolerance="1 meters"):
+    """
+    Similar to the DeleteIdentical function in arcpy. This tool goes one more step to only keep the records with the
+    smaller id
+    :param data:
+    :param fields:
+    :param xy_tolerance:
+    """
     identical_table = "in_memory\\identical_table"
     arcpy.FindIdentical_management(data, identical_table, fields, xy_tolerance, "", "ONLY_DUPLICATES")
     fseq_list = []

@@ -1,7 +1,7 @@
 import arcpy
 import os
 from itertools import combinations
-from tss import build_string_in_sql_expression
+from dao_util import build_string_in_sql_expression
 
 overlap_segments = "in_memory\\overlap_segments"
 active_centerline_sequence_view = "active_centerline_sequence_view"
@@ -10,12 +10,26 @@ unsplit_centerline = "in_memory\\unsplit_centerline"
 
 
 def extract_concurrent_segment_end_points_from_geometry(network, concurrent_segment_end_points):
+    """
+
+    :param network:
+    :param concurrent_segment_end_points:
+    """
     find_overlap_segments(network, overlap_segments)
     overlap_segments_to_concurrent_end_points(overlap_segments, concurrent_segment_end_points)
 
 
 def extract_concurrent_segment_end_points_from_centerline(centerline, centerline_sequence, network_id_field, centerline_rid_field, network_id,
                                                           concurrent_segment_end_points):
+    """
+
+    :param centerline:
+    :param centerline_sequence:
+    :param network_id_field:
+    :param centerline_rid_field:
+    :param network_id:
+    :param concurrent_segment_end_points:
+    """
     find_overlap_segments_from_centerline(centerline, centerline_sequence, network_id_field, centerline_rid_field, network_id, overlap_segments)
     overlap_segments_to_concurrent_end_points(overlap_segments, concurrent_segment_end_points)
 
@@ -54,6 +68,11 @@ def find_overlap_segments_from_centerline(centerline, centerline_sequence, netwo
 
 
 def find_overlap_segments(network, overlap_segments):
+    """
+    Find overlap segments using pure geometry
+    :param network:
+    :param overlap_segments:
+    """
     arcpy.CreateFeatureclass_management(os.path.dirname(overlap_segments), os.path.basename(overlap_segments), "POLYLINE", "", "ENABLED", "DISABLED", network)
     with arcpy.da.InsertCursor(overlap_segments, ['SHAPE@']) as iCursor:
         with arcpy.da.SearchCursor(network, ['SHAPE@', 'OID@']) as sCursor:
@@ -67,6 +86,11 @@ def find_overlap_segments(network, overlap_segments):
 
 
 def overlap_segments_to_concurrent_end_points(overlap_segments, concurrent_end_points):
+    """
+
+    :param overlap_segments:
+    :param concurrent_end_points:
+    """
     arcpy.FeatureVerticesToPoints_management(overlap_segments, concurrent_end_points, "BOTH_ENDS")
 
 if __name__ == "__main__":

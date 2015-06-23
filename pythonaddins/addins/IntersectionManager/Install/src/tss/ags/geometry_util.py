@@ -1,6 +1,14 @@
 import math
 
 def calculate_approach_angle(segment, intersection, influence_distance, azumith_zero_direction):
+    """
+    Calculate the approach angle of a segment
+    :param segment:
+    :param intersection:
+    :param influence_distance:
+    :param azumith_zero_direction:
+    :return:
+    """
     intersection_point = intersection.firstPoint
     if intersection.distanceTo(segment.firstPoint) < intersection.distanceTo(segment.lastPoint):
         next_point = segment.positionAlongLine(influence_distance).firstPoint
@@ -14,6 +22,12 @@ def calculate_approach_angle(segment, intersection, influence_distance, azumith_
 
 
 def angle_between_two_vectors(vector1, vector2):
+    """
+    Calculate the angle between two vectors
+    :param vector1:
+    :param vector2:
+    :return:
+    """
     vector11_sum = 0
     vector12_sum = 0
     vector22_sum = 0
@@ -33,11 +47,23 @@ def angle_between_two_vectors(vector1, vector2):
 
 def angle_larger_than_pi(vector1, vector2):
     # clockwise angle from vector1 to vector2
+    """
+    Check if the angle between two vectors are larger than pi
+    :param vector1:
+    :param vector2:
+    :return:
+    """
     return vector1[0] * vector2[1] - vector1[1] * vector2[0] > 0
 
 
 # Convert angle to direction descriptor
 def angle_to_direction(angle, azumith_zero_direction):
+    """
+    Convert angle to direction based on the azumith zero direction
+    :param angle:
+    :param azumith_zero_direction:
+    :return:
+    """
     if azumith_zero_direction == "E":
         angle = angle + 90 if angle <= 270 else angle + 90 - 360
     if angle >= 337.5 or angle < 22.5:
@@ -58,9 +84,19 @@ def angle_to_direction(angle, azumith_zero_direction):
         return "NorthWest"
 
 def geodesic_angle_to_circular_angle(angle):
+    """
+    Geodesic angle to circular angle
+    :param angle:
+    :return:
+    """
     return angle if angle > 0 else angle + 360
 
 def geodesic_angle_to_direction(angle):
+    """
+    Convert geodesic angle to direction
+    :param angle:
+    :return:
+    """
     if -22.5 < angle <=22.5:
         return "North"
     elif 22.5 < angle <= 67.5:

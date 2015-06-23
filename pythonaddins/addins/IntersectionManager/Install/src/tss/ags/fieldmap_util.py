@@ -3,6 +3,12 @@ __author__ = 'yluo'
 import arcpy
 
 def keep_fields_fms(input, fields):
+    """
+    Create a fieldmappings with the input fields
+    :param input:
+    :param fields:
+    :return:
+    """
     fms = arcpy.FieldMappings()
     for field in fields:
         fm = arcpy.FieldMap()
@@ -11,6 +17,12 @@ def keep_fields_fms(input, fields):
     return fms
 
 def keep_rename_fields_fms(inputs, field_dict_list):
+    """
+    Create a fieldmappings with the keep-rename rules specified. Need to be tested
+    :param inputs:
+    :param field_dict_list:
+    :return:
+    """
     fms = arcpy.FieldMappings()
     all_fields = []
     for input in inputs:
@@ -19,6 +31,8 @@ def keep_rename_fields_fms(inputs, field_dict_list):
     keep_fields = [field_dict['old'] for field_dict in field_dict_list]
     for field in all_fields:
         if field.required:
+            continue
+        if field.type in ["OID", "Geometry"]:
             continue
         field_name = field.name
         if field_name not in keep_fields:
