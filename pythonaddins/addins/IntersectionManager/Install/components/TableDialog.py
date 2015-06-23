@@ -51,11 +51,12 @@ class TableDialog(wx.Dialog):
     # End __init__ built-in
 
     def ClearEdits(self, event):
-        self.table.ClearEdits("New Intersection ID")
+        self.table.ClearEdits("Renamed Intersection ID")
 
     def SaveEdits(self, event):
         self.Show(False)
         self.updated_data = self.GetUpdatedData()
+        self.SetReturnCode(wx.ID_OK)
 
     def ClearTable(self):
         self.table.ClearTable()
@@ -65,15 +66,17 @@ class TableDialog(wx.Dialog):
 
     def GetUpdatedData(self):
         updated_data = self.table.GetUpdatedData()
+        return updated_data
 
-        if len(updated_data):
-            return updated_data
-        else:
-            return None
+        # if len(updated_data):
+        #     return updated_data
+        # else:
+        #     return None
 
     def OnClose(self, event):
         """Close the frame. Do not use destroy."""
         self.Show(False)
+        self.SetReturnCode(wx.ID_CANCEL)
     # End OnClose event method
 
 

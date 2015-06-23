@@ -92,8 +92,9 @@ def populate_intersection_leg_info(workspace, create_date):
     arcpy.MakeFeatureLayer_management(network, "network_layer", query_filter)
     query_filter = "({0} is null or {0} <= {2}) and ({1} is null or {1} > {2})".format(function_class_from_date_field, function_class_to_date_field, query_date_string) if function_class_from_date_field and function_class_to_date_field else "1=1"
     arcpy.MakeFeatureLayer_management(function_class_event, "function_class_layer", query_filter)
-    query_filter = "({0} is null or {0} <= {2}) and ({1} is null or {1} > {2})".format(aadt_from_date_field, aadt_to_date_field, query_date_string) if aadt_from_date_field and aadt_to_date_field else "1=1"
-    arcpy.MakeFeatureLayer_management(aadt_event, "aadt_layer", query_filter)
+    if arcpy.Exists(aadt_event):
+        query_filter = "({0} is null or {0} <= {2}) and ({1} is null or {1} > {2})".format(aadt_from_date_field, aadt_to_date_field, query_date_string) if aadt_from_date_field and aadt_to_date_field else "1=1"
+        arcpy.MakeFeatureLayer_management(aadt_event, "aadt_layer", query_filter)
     # -------------------------------------------------------------------------------------
 
     logger.info("Started populating intersection approach event")

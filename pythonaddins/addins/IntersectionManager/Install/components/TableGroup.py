@@ -99,10 +99,12 @@ class TableGroup(wx.Panel):
             if value and (not value.isspace()):
                 dictionary[oid] = value
 
-        if len(dictionary):
-            return dictionary
-        else:
-            return None
+        return dictionary
+
+        # if len(dictionary):
+        #     return dictionary
+        # else:
+        #     return None
 
     @property
     def value(self):

@@ -191,14 +191,17 @@ class IntersectionApproachEvent:
         logger.info("Finished creating leg type points")
 
         self.join_event_fields_to_leg_type_points(self.function_class_layer, self.function_class_rid_field, [self.function_class_field], function_class_join)
-        self.join_event_fields_to_leg_type_points(self.aadt_layer, self.aadt_rid_field, [self.aadt_field], aadt_join)
+        if arcpy.Exists(self.aadt_layer):
+            self.join_event_fields_to_leg_type_points(self.aadt_layer, self.aadt_rid_field, [self.aadt_field], aadt_join)
 
         logger.info("Finished joining the function class and addt values to leg type points")
 
         # Build the intersection__seg__value_dict
         inter__seg__leg_value_dict = {}
         self.build_inter__seg__value_dict(function_class_join, self.function_class_rid_field, self.function_class_field, inter__seg__leg_value_dict)
-        self.build_inter__seg__value_dict(aadt_join, self.aadt_rid_field, self.aadt_field, inter__seg__leg_value_dict)
+
+        if arcpy.Exists(aadt_join):
+            self.build_inter__seg__value_dict(aadt_join, self.aadt_rid_field, self.aadt_field, inter__seg__leg_value_dict)
 
         # calcuate the leg type for each intersection and segment
         for intersection_id, seg__value_dict in inter__seg__leg_value_dict.items():

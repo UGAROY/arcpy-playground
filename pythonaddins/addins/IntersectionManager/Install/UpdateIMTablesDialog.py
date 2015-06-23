@@ -84,21 +84,24 @@ class UpdateIMTablesDialog(wx.Frame):
         self.Show(False)
 
     def OnOK(self, event):
+        self.Show(False)
+
+        # Input
+        workspace = Config.get(SECTION, "workspace")
+        meta_date_dict = read_im_meta_data(workspace)
+        create_date = meta_date_dict["create_date"]
+        last_update_date =  meta_date_dict["last_update_date"]
+        today_date = truncate_datetime(datetime.datetime.now())
+
         try:
-            self.Show(False)
-
-            # Input
-            workspace = Config.get(SECTION, "workspace")
-            meta_date_dict = read_im_meta_data(workspace)
-            create_date = meta_date_dict["create_date"]
-            last_update_date =  meta_date_dict["last_update_date"]
-            today_date = truncate_datetime(datetime.datetime.now())
-
             if  last_update_date == today_date:
                 # If the last_update_date is today, we will have to roll back the changes to the intersection tables
                 # we have made today and also set the last_update_date to one day before to mimic the intersection related
                 # events are all created yesterday. This is a workaround since the date in the network is the only
                 # indicator we can use the differentiate the new and old features
+                # Due to the fact the Roads And Highways doesn't track the time and this tool fully relies on the date fields
+                # in the data, the best practices is 1) don't run the update the same day the intersections are created.
+                # 2) Only update once at the end of the day
                 roll_back(workspace, last_update_date)
                 last_update_date = last_update_date - datetime.timedelta(days=1)
             elif last_update_date is None:
@@ -116,12 +119,12 @@ class UpdateIMTablesDialog(wx.Frame):
 
                     if len(intersections):
                         self.table.PopulateTable(intersections)
-                        self.table.ShowModal()
 
-                        updated_intersections = self.table.updated_data
+                        if self.table.ShowModal() == wx.ID_OK:
+                            updated_intersections = self.table.updated_data
 
-                        if updated_intersections:
-                            update_new_intersection_id(workspace,last_update_date,updated_intersections)
+                            if len(updated_intersections):
+                                update_new_intersection_id(workspace,last_update_date,updated_intersections)
                     # ---------------------------------------------------------------------------------------------------
 
                     update_intersection_route_event(workspace,last_update_date)
@@ -129,14 +132,14 @@ class UpdateIMTablesDialog(wx.Frame):
                     update_intersection_approach_event(workspace,last_update_date)
 
                     custom_update_odot(workspace, today_date)
-                    # write_im_meta_data(workspace, None, today_date)
+                    write_im_meta_data(workspace, None, today_date)
 
                     clear_table_of_content(workspace)
 
                     dlg = wx.MessageDialog(None,"Update intersection tables success!",
                                           "Update Intersections Info", wx.OK | wx.ICON_INFORMATION)
                     dlg.ShowModal()
-
+                    dlg.Destroy()
             else:
                 msg_dlg= wx.MessageDialog(None,"No changed have been made since %s" % last_update_date,
                                           "Update Intersections Info", wx.OK | wx.ICON_INFORMATION)
@@ -144,6 +147,7 @@ class UpdateIMTablesDialog(wx.Frame):
                 msg_dlg.Destroy()
 
         except Exception, err:
+            clear_table_of_content(workspace)
             logger.warning(traceback.format_exc())
             wx.MessageBox(err.args[0], caption="Error", style=wx.OK | wx.ICON_ERROR)
 

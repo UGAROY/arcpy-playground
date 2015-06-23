@@ -10,6 +10,8 @@ out_zip_name = os.path.join(current_path,
 BACKUP_FILE_PATTERN = re.compile(".*_addin_[0-9]+[.]py$", re.IGNORECASE)
 
 def looks_like_a_backup(filename):
+    if filename == 'params_updated.ini':
+        return True
     return bool(BACKUP_FILE_PATTERN.match(filename))
 
 with zipfile.ZipFile(out_zip_name, 'w', zipfile.ZIP_DEFLATED) as zip_file:
