@@ -99,6 +99,9 @@ class UpdateIMTablesDialog(wx.Frame):
                 # we have made today and also set the last_update_date to one day before to mimic the intersection related
                 # events are all created yesterday. This is a workaround since the date in the network is the only
                 # indicator we can use the differentiate the new and old features
+                # Due to the fact the Roads And Highways doesn't track the time and this tool fully relies on the date fields
+                # in the data, the best practices is 1) don't run the update the same day the intersections are created.
+                # 2) Only update once at the end of the day
                 roll_back(workspace, last_update_date)
                 last_update_date = last_update_date - datetime.timedelta(days=1)
             elif last_update_date is None:
