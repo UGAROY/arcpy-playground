@@ -150,6 +150,8 @@ class IntersectionApproachEvent:
         arcpy.GenerateNearTable_analysis(leg_angle_points, self.intersection_event, near_table, "{0} MILES".format(float(self.angle_calculation_distance) + 0.001), "NO_LOCATION", "ANGLE", "ALL", "0", "GEODESIC")
         arcpy.JoinField_management(near_table, "IN_FID", leg_angle_points, "OBJECTID", "%s;%s" % (self.roadway_segment_id_field, self.intersection_id_field))
         alter_field_name(near_table, self.intersection_id_field, "lap_%s" % self.intersection_id_field)
+        logger.info(str([field.name for field in arcpy.ListFields(near_table)]))
+        logger.info(self.intersection_id_field)
         arcpy.JoinField_management(near_table, "NEAR_FID", self.intersection_event, "OBJECTID", self.intersection_id_field)
         inter__seg_angle_dict = {}
         with arcpy.da.SearchCursor(near_table, [self.intersection_id_field, self.roadway_segment_id_field, "NEAR_ANGLE"], "lap_{0} = {0}".format(self.intersection_id_field)) as sCursor:

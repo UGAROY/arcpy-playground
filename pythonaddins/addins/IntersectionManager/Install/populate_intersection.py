@@ -16,7 +16,7 @@ parameters = get_default_parameters()
 workspace = parameters.get(SECTION, "workspace")
 create_date = truncate_datetime(input_datetime)
 
-populate_intersections_info(workspace, create_date)
+# populate_intersections_info(workspace, create_date)
 populate_intersection_leg_info(workspace, create_date)
 # custom_create_odot(workspace)
 write_im_meta_data(workspace, create_date)
