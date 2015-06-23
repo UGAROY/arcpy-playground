@@ -57,7 +57,6 @@ class IntersectionRouteEvent:
         arcpy.AddField_management(self.intersection_route_event, self.intersection_route_at_rname_field, "TEXT", "", "", 20)
 
     def populate_intersection_route_event_table(self):
-        logger.info("Start locating features along routes")
         arcpy.LocateFeaturesAlongRoutes_lr(self.intersection_event, self.network, self.network_route_id_field, self.search_radius,
                                            intersections_along_route, "%s Point %s" % (intersection_rid_field, intersection_meas_field),
                                            "ALL", "NO_DISTANCE")
@@ -74,7 +73,6 @@ class IntersectionRouteEvent:
         # The locate feature along route won't create any records for that route
         # In order to get all the route id pairs, we will have to do another spatial join
         arcpy.SpatialJoin_analysis(self.intersection_event, self.network, inter_route_join, "JOIN_ONE_TO_MANY", "KEEP_ALL", "" , "INTERSECT", self.search_radius)
-        logger.info("Finished spatial join")
         inter__route_list_dict = {}
         with arcpy.da.SearchCursor(inter_route_join, [self.intersection_id_field, self.network_route_id_field]) as sCursor:
             for sRow in sCursor:
@@ -82,7 +80,6 @@ class IntersectionRouteEvent:
                 if intersection_id not in inter__route_list_dict:
                     inter__route_list_dict[intersection_id] = []
                 inter__route_list_dict[intersection_id].append(route_id)
-        logger.info("Search Cursor....")
 
         with arcpy.da.InsertCursor(self.intersection_route_event, (self.intersection_id_field, self.intersection_route_on_rid_field, self.intersection_route_at_rid_field, self.intersection_route_on_measure_field)) as iCursor:
             for intersection_id, route_list in inter__route_list_dict.items():

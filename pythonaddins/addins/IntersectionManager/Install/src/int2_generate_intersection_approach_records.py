@@ -97,8 +97,6 @@ def populate_intersection_leg_info(workspace, create_date):
         arcpy.MakeFeatureLayer_management(aadt_event, "aadt_layer", query_filter)
     # -------------------------------------------------------------------------------------
 
-    logger.info("Started populating intersection approach event")
-
     intersection_approach_event_instance = intersection_approach_event_mod.IntersectionApproachEvent(
         network="network_layer",
         network_route_id_field=network_route_id_field,
@@ -140,13 +138,17 @@ def populate_intersection_leg_info(workspace, create_date):
         angle_calculation_distance=angle_calculation_distance,
         azumith_zero_direction=azumith_zero_direction,
         measure_scale=measure_scale,
-        search_radius=search_radius
+        search_radius=search_radius,
+
+        dbtype=dbtype
     )
     intersection_approach_event = intersection_approach_event_instance.create_intersection_approach_event()
 
     arcpy.AddField_management(intersection_approach_event, from_date_field, "DATE")
     arcpy.AddField_management(intersection_approach_event, to_date_field, "DATE")
     arcpy.CalculateField_management(intersection_approach_event, from_date_field, "'%s'" % date_string, "PYTHON")
+
+    logger.info("Finished populating intersection approach event")
 
 
 if __name__ == "__main__":

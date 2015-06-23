@@ -74,10 +74,11 @@ class IntersectionApproachEvent:
 
         self.no_null_measure_where_clause = "%s is not NULL and %s is not NULL and %s is not NULL" % (self.roadway_segment_from_meas_field, self.roadway_segment_to_meas_field, intersection_measure_field)
 
+        self.dbtype = kwargs.get("dbtype", None)
+
     def create_intersection_approach_event(self):
         arcpy.SpatialJoin_analysis(self.roadway_segment_event, self.intersection_event, segments_join_intersections, "JOIN_ONE_TO_MANY", "KEEP_COMMON", "#", "INTERSECT", self.search_radius, "#")
         logger.info("Finished joining roadway segment event to intersection event")
-
         self.populate_intersection_measure()
         logger.info("Finished populating the intersection measure")
         self.populate_approach_id()
@@ -149,9 +150,7 @@ class IntersectionApproachEvent:
         # For now just hard code the angle calculation method to "GEODESIC". TODO: verify what the user want
         arcpy.GenerateNearTable_analysis(leg_angle_points, self.intersection_event, near_table, "{0} MILES".format(float(self.angle_calculation_distance) + 0.001), "NO_LOCATION", "ANGLE", "ALL", "0", "GEODESIC")
         arcpy.JoinField_management(near_table, "IN_FID", leg_angle_points, "OBJECTID", "%s;%s" % (self.roadway_segment_id_field, self.intersection_id_field))
-        alter_field_name(near_table, self.intersection_id_field, "lap_%s" % self.intersection_id_field)
-        logger.info(str([field.name for field in arcpy.ListFields(near_table)]))
-        logger.info(self.intersection_id_field)
+        alter_field_name(near_table, self.intersection_id_field, "lap_%s" % self.intersection_id_field, self.dbtype!="FileGdb")
         arcpy.JoinField_management(near_table, "NEAR_FID", self.intersection_event, "OBJECTID", self.intersection_id_field)
         inter__seg_angle_dict = {}
         with arcpy.da.SearchCursor(near_table, [self.intersection_id_field, self.roadway_segment_id_field, "NEAR_ANGLE"], "lap_{0} = {0}".format(self.intersection_id_field)) as sCursor:
@@ -196,8 +195,7 @@ class IntersectionApproachEvent:
         self.join_event_fields_to_leg_type_points(self.function_class_layer, self.function_class_rid_field, [self.function_class_field], function_class_join)
         if arcpy.Exists(self.aadt_layer):
             self.join_event_fields_to_leg_type_points(self.aadt_layer, self.aadt_rid_field, [self.aadt_field], aadt_join)
-
-        logger.info("Finished joining the function class and addt values to leg type points")
+            logger.info("Finished joining the function class and addt values to leg type points")
 
         # Build the intersection__seg__value_dict
         inter__seg__leg_value_dict = {}
@@ -242,7 +240,9 @@ class IntersectionApproachEvent:
             field_name = field.name
             if field_name not in fields:
                 fm_index = fms.findFieldMapIndex(field_name)
-                fms.removeFieldMap(fm_index)
+                if fm_index != -1:
+                    # Exclude shape and oid field, which will not be included in the fieldMappings.addTable
+                    fms.removeFieldMap(fm_index)
 
         # Tod avoid the conflicts, need to rename the rid_field
         rid_field_index = fms.findFieldMapIndex(rid_field_name)

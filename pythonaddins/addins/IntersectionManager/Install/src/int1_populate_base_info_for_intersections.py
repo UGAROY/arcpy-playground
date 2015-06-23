@@ -123,7 +123,8 @@ def populate_intersections_info(workspace, create_date):
         roadway_segment_from_meas_field=roadway_segment_from_meas_field,
         roadway_segment_to_meas_field=roadway_segment_to_meas_field,
         measure_scale=measure_scale,
-        search_radius=search_radius
+        search_radius=search_radius,
+        dbtype=dbtype
     )
     roadway_segment_event = roadway_segment_event_instance.create_roadway_segment_event()
 

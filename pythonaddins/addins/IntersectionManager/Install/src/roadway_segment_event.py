@@ -19,6 +19,8 @@ class RoadwaySegmentEvent:
         self.measure_scale = kwargs.get("measure_scale", 3)
         self.search_radius = kwargs.get("search_radius", "1 meters")
 
+        self.dbtype = kwargs.get("dbtype", None)
+
     def create_roadway_segment_event(self):
         self.generate_int_to_int_features()
         self.populate_from_to_measure_fields()
@@ -43,7 +45,7 @@ class RoadwaySegmentEvent:
 
     def adjust_output_schema(self):
         if self.roadway_segment_rid_field != self.network_route_id_field:
-            alter_field_name(self.roadway_segment_event, self.network_route_id_field, self.roadway_segment_rid_field)
+            alter_field_name(self.roadway_segment_event, self.network_route_id_field, self.roadway_segment_rid_field, self.dbtype!="FileGdb")
         transform_dataset_keep_fields(self.roadway_segment_event,
                                       [self.roadway_segment_rid_field, self.roadway_segment_id_field, self.roadway_segment_from_meas_field, self.roadway_segment_to_meas_field])
 

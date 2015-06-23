@@ -215,8 +215,6 @@ def check_intersection_event_updates(workspace, input_date):
     Get All Differences Between Previous and Current Dataset
     """
 
-    logger.info("Start checking change/update")
-
     arcpy.MakeFeatureLayer_management(network, previous_active_network_layer, previous_active_network_string)
     # Create current network layer
     arcpy.MakeFeatureLayer_management(network, current_active_network_layer, current_active_network_string)
@@ -245,9 +243,10 @@ def check_intersection_event_updates(workspace, input_date):
 
     if len(created_route_ids) == 0 and len(retired_route_ids) == 0 and not created_retired_function_class_exist and not created_retired_aadt_exist:
         logger.warning("No change/update has been made since %s" % last_update_date)
-        # arcpy.AddError("No changed have been made since %s" % last_update_date)
+        logger.info("Finished checking change/update")
         return False
     else:
+        logger.info("Finished checking change/update")
         return True
     #-------------------------------------------------------------------------------------------------------------------------------
 
@@ -341,7 +340,7 @@ def update_intersection_event(workspace, input_date):
     """
     Update Intersection_Event
     """
-    logger.info("Start updating intersection event")
+
     # The tba_current_network should include 1) inserted routes 2) updated after routes 3) routes intersecting inserted routes
     # 4) routes intersecting updated after routes 5) routes intersecting deleted routes
     arcpy.MakeFeatureLayer_management(current_active_network_layer, tba_current_network_layer)
@@ -418,6 +417,7 @@ def update_intersection_event(workspace, input_date):
     # Delete Duplicated Records
     delete_identical_only_keep_min_oid(intersection_event, [arcpy.Describe(intersection_event).shapeFieldName])
 
+    logger.info("Finished updating intersection event")
     #-------------------------------------------------------------------------------------------------------------------
 
 
@@ -552,6 +552,7 @@ def update_new_intersection_id(workspace,input_date, updated_intersections):
             uCursor.updateRow(row)
     del uCursor
 
+    logger.info("Finished updating user assigned new intersection ids")
     #------------------------------------------------------------------------------------------------------------------
 
 
@@ -641,7 +642,6 @@ def update_intersection_route_event(workspace, input_date):
     """
     Update Intersection_Route_Event
     """
-    logger.info("Start updating intersection route event")
 
     # Recreate the active intersections
     arcpy.MakeFeatureLayer_management(intersection_event, new_active_intersection_layer, active_string)
@@ -737,6 +737,8 @@ def update_intersection_route_event(workspace, input_date):
     # Recreate the active intersection route event
     arcpy.MakeTableView_management(intersection_route_event, new_active_intersection_route_event_layer, active_string)
 
+    logger.info("Finished updating intersection route event")
+
 
 def update_roadway_segment_event(workspace, input_date):
     # global variables
@@ -824,7 +826,6 @@ def update_roadway_segment_event(workspace, input_date):
     """
     Update Roadway_Segment_Event
     """
-    logger.info("Start updating roadway segment event")
 
     # to be analyze current network should include 1) inserted routes 2) updated after routes
     # 3) routes intersecting the real_new_intersections 4) routes intersecting real_old_intersections
@@ -907,6 +908,8 @@ def update_roadway_segment_event(workspace, input_date):
     delete_identical_only_keep_min_oid(roadway_segment_event, [arcpy.Describe(roadway_segment_event).shapeFieldName, roadway_segment_rid_field, roadway_segment_from_meas_field, roadway_segment_to_meas_field])
     # recreate the active roadways segment event
     arcpy.MakeFeatureLayer_management(roadway_segment_event, new_active_roadway_segment_event_layer, active_string)
+
+    logger.info("Finished updating roadway segment event")
 
 
 def update_intersection_approach_event(workspace, input_date):
@@ -995,7 +998,6 @@ def update_intersection_approach_event(workspace, input_date):
     """
     Update Intersection_Approach_Event
     """
-    logger.info("Start updating intersection approach event")
 
     # One special thing here is the attribute changes can also affect the result
     if created_retired_function_class_exist:
@@ -1147,6 +1149,9 @@ def update_intersection_approach_event(workspace, input_date):
                                                                      intersection_approach_angle_field, intersection_approach_leg_dir_field,
                                                                      intersection_approach_beg_inf_field, intersection_approach_end_inf_field,
                                                                      intersection_approach_leg_type_field, intersection_approach_leg_id_field])
+
+    logger.info("Finished updating intersection approach event")
+
 
 if __name__ == "__main__":
     from tss import truncate_datetime
