@@ -87,7 +87,7 @@ class UpdateIMTablesDialog(wx.Frame):
     def OnOK(self, event):
         self.Show(False)
 
-        self.progress_bar = wx.ProgressDialog("Populate Intersection Tables", "Progress")
+        self.progress_bar = wx.ProgressDialog("Update Intersection Tables", "Checking updates...")
 
         # Input
         workspace = Config.get(SECTION, "workspace")
@@ -112,9 +112,9 @@ class UpdateIMTablesDialog(wx.Frame):
                 #                           "Update Intersections Info", wx.YES_NO | wx.ICON_INFORMATION)
                 #
                 # if msg_dlg.ShowModal() == wx.ID_YES:
-                self.progress_bar.Update(10, "Updating Intersection...")
+                self.progress_bar.Update(10, "Updating Intersection Event...")
                 update_intersection_event(workspace, last_update_date)
-                self.progress_bar.Update(100, "Finished Updating New Intersection")
+                self.progress_bar.Update(100, "Finished Updating New Intersection Event")
 
                 # Review new intersections -------------------------------------------------------------------------
                 intersections = get_new_intersection_event(workspace,last_update_date)
@@ -129,23 +129,30 @@ class UpdateIMTablesDialog(wx.Frame):
                             update_new_intersection_id(workspace,last_update_date,updated_intersections)
                 # ---------------------------------------------------------------------------------------------------
 
-                self.progress_bar = wx.ProgressDialog("Populate Intersection Tables", "Progress")
+                self.progress_bar = wx.ProgressDialog("Update Intersection Tables", "In Progress")
                 self.progress_bar.Update(10, "Updating Intersection Route Event...")
                 update_intersection_route_event(workspace,last_update_date)
-                self.progress_bar.Update(30, "Updating Roadway Segment Event...")
+                self.progress_bar.Update(40, "Updating Roadway Segment Event...")
                 update_roadway_segment_event(workspace,last_update_date)
-                self.progress_bar.Update(50, "Updating Intersection Approach Event...")
+                self.progress_bar.Update(70, "Updating Intersection Approach Event...")
                 update_intersection_approach_event(workspace,last_update_date)
-                #custom_update_odot(workspace, today_date)
+                custom_update_odot(workspace, today_date)
                 write_im_meta_data(workspace, None, today_date)
                 clear_table_of_content(workspace)
                 self.progress_bar.Update(100, "Done")
+
+                self.progress_bar.Show(False)
+                self.progress_bar.Destroy()
 
                 dlg = wx.MessageDialog(None,"Update intersection tables success!",
                                       "Update Intersections Info", wx.OK | wx.ICON_INFORMATION)
                 dlg.ShowModal()
                 dlg.Destroy()
             else:
+                self.progress_bar.Update(100, "")
+                self.progress_bar.Show(False)
+                self.progress_bar.Destroy()
+
                 msg_dlg= wx.MessageDialog(None,"No changed have been made since %s" % last_update_date,
                                           "Update Intersections Info", wx.OK | wx.ICON_INFORMATION)
                 msg_dlg.ShowModal()
@@ -154,6 +161,9 @@ class UpdateIMTablesDialog(wx.Frame):
         except Exception, err:
             clear_table_of_content(workspace)
             logger.warning(traceback.format_exc())
+            self.progress_bar.Update(100, "")
+            self.progress_bar.Show(False)
+            self.progress_bar.Destroy()
             wx.MessageBox(err.args[0], caption="Error", style=wx.OK | wx.ICON_ERROR)
 
 
