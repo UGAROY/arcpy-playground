@@ -319,13 +319,6 @@ def update_intersection_event(workspace, input_date):
             route_id = sRow[0]
             if route_id not in retired_route_ids:
                 retired_route_ids.append(route_id)
-    # Get the updated and retired route ids based on the updated functional class and aadt
-    if function_class_from_date_field and function_class_to_date_field:
-        if subset_data_exist(function_class_event, "%s or %s" % (function_class_created_since_date_string, function_class_retired_since_date_string)):
-            created_retired_function_class_exist = True
-    if aadt_from_date_field and aadt_from_date_field:
-        if subset_data_exist(aadt_event, "%s or %s" % (aadt_created_since_date_string, aadt_retired_since_date_string)):
-            created_retired_aadt_exist = True
 
     #Created network at all states ----------------------------------------------------------------------------------------------
     inserted_route_ids = list(set(created_route_ids) - set(retired_route_ids))
@@ -481,7 +474,7 @@ def get_new_intersection_event(workspace,input_date):
     intersections = []
 
     # generate intersection layers for review
-    new_intersection_string = "%s >= %s" % (from_date_field, last_update_date)
+    new_intersection_string = "%s > %s" % (from_date_field, last_update_date)
     new_created_intersections = "new_created_intersections"
     arcpy.MakeFeatureLayer_management(intersection_event,new_created_intersections,new_intersection_string)
 

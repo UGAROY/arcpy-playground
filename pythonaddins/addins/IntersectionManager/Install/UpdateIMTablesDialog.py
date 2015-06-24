@@ -4,6 +4,7 @@ import traceback
 import datetime
 
 from components.TableDialog import TableDialog
+# from components.AgsProgressDialog import AgsProgressDialog
 
 from src.tss import truncate_datetime
 from src.util.helper import get_default_parameters
@@ -86,6 +87,8 @@ class UpdateIMTablesDialog(wx.Frame):
     def OnOK(self, event):
         self.Show(False)
 
+        self.progress_bar = wx.ProgressDialog("Populate Intersection Tables", "Progress")
+
         # Input
         workspace = Config.get(SECTION, "workspace")
         meta_date_dict = read_im_meta_data(workspace)
@@ -105,38 +108,43 @@ class UpdateIMTablesDialog(wx.Frame):
                 last_update_date = create_date
 
             if check_intersection_event_updates(workspace, last_update_date):
-                msg_dlg= wx.MessageDialog(None,"Changes have been made since %s. Do you want to update intersection tables?" % last_update_date,
-                                          "Update Intersections Info", wx.YES_NO | wx.ICON_INFORMATION)
+                # msg_dlg= wx.MessageDialog(None,"Changes have been made since %s. Do you want to update intersection tables?" % last_update_date,
+                #                           "Update Intersections Info", wx.YES_NO | wx.ICON_INFORMATION)
+                #
+                # if msg_dlg.ShowModal() == wx.ID_YES:
+                self.progress_bar.Update(10, "Updating Intersection...")
+                update_intersection_event(workspace, last_update_date)
+                self.progress_bar.Update(100, "Finished Updating New Intersection")
 
-                if msg_dlg.ShowModal() == wx.ID_YES:
-                    update_intersection_event(workspace, last_update_date)
+                # Review new intersections -------------------------------------------------------------------------
+                intersections = get_new_intersection_event(workspace,last_update_date)
 
-                    # Review new intersections -------------------------------------------------------------------------
-                    intersections = get_new_intersection_event(workspace,last_update_date)
+                if len(intersections):
+                    self.table.PopulateTable(intersections)
 
-                    if len(intersections):
-                        self.table.PopulateTable(intersections)
+                    if self.table.ShowModal() == wx.ID_OK:
+                        updated_intersections = self.table.updated_data
 
-                        if self.table.ShowModal() == wx.ID_OK:
-                            updated_intersections = self.table.updated_data
+                        if len(updated_intersections):
+                            update_new_intersection_id(workspace,last_update_date,updated_intersections)
+                # ---------------------------------------------------------------------------------------------------
 
-                            if len(updated_intersections):
-                                update_new_intersection_id(workspace,last_update_date,updated_intersections)
-                    # ---------------------------------------------------------------------------------------------------
+                self.progress_bar = wx.ProgressDialog("Populate Intersection Tables", "Progress")
+                self.progress_bar.Update(10, "Updating Intersection Route Event...")
+                update_intersection_route_event(workspace,last_update_date)
+                self.progress_bar.Update(30, "Updating Roadway Segment Event...")
+                update_roadway_segment_event(workspace,last_update_date)
+                self.progress_bar.Update(50, "Updating Intersection Approach Event...")
+                update_intersection_approach_event(workspace,last_update_date)
+                #custom_update_odot(workspace, today_date)
+                write_im_meta_data(workspace, None, today_date)
+                clear_table_of_content(workspace)
+                self.progress_bar.Update(100, "Done")
 
-                    update_intersection_route_event(workspace,last_update_date)
-                    update_roadway_segment_event(workspace,last_update_date)
-                    update_intersection_approach_event(workspace,last_update_date)
-
-                    custom_update_odot(workspace, today_date)
-                    write_im_meta_data(workspace, None, today_date)
-
-                    clear_table_of_content(workspace)
-
-                    dlg = wx.MessageDialog(None,"Update intersection tables success!",
-                                          "Update Intersections Info", wx.OK | wx.ICON_INFORMATION)
-                    dlg.ShowModal()
-                    dlg.Destroy()
+                dlg = wx.MessageDialog(None,"Update intersection tables success!",
+                                      "Update Intersections Info", wx.OK | wx.ICON_INFORMATION)
+                dlg.ShowModal()
+                dlg.Destroy()
             else:
                 msg_dlg= wx.MessageDialog(None,"No changed have been made since %s" % last_update_date,
                                           "Update Intersections Info", wx.OK | wx.ICON_INFORMATION)
