@@ -75,7 +75,7 @@ class UpdateIMTablesDialog(wx.Frame):
         self.CenterOnScreen()
 
         # Initiate table
-        col_names = ["Object ID","New Intersection ID","Renamed Intersection ID"]
+        col_names = ["ObjectID","System Assigned Intersection ID","Intersection ID"]
         self.table = TableDialog("Update Intersection Info",data=[],colLabels=col_names)
 
         # # Uncomment line below when testing as a standalone application.
@@ -93,7 +93,7 @@ class UpdateIMTablesDialog(wx.Frame):
         workspace = Config.get(SECTION, "workspace")
         meta_date_dict = read_im_meta_data(workspace)
         create_date = meta_date_dict["create_date"]
-        last_update_date =  meta_date_dict["last_update_date"]
+        last_update_date = meta_date_dict["last_update_date"]
         today_date = truncate_datetime(datetime.datetime.now())
 
         try:

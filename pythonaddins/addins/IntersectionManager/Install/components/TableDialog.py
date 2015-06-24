@@ -51,7 +51,7 @@ class TableDialog(wx.Dialog):
     # End __init__ built-in
 
     def ClearEdits(self, event):
-        self.table.ClearEdits("Renamed Intersection ID")
+        self.table.ClearEdits("Intersection ID")
 
     def SaveEdits(self, event):
         self.Show(False)

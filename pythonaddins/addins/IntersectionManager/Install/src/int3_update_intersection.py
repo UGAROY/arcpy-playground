@@ -497,15 +497,19 @@ def get_new_intersection_event(workspace,input_date):
 
         # add layers to map document
         new_created_intersections_lyr = arcpy.mapping.Layer(new_created_intersections)
+        new_created_intersections_lyr.name = "New Intersections"
         arcpy.mapping.AddLayer(df,new_created_intersections_lyr,"BOTTOM")
 
         new_retired_intersections_lyr = arcpy.mapping.Layer(new_retired_intersections)
+        new_retired_intersections_lyr.name = "Retired Intersections"
         arcpy.mapping.AddLayer(df,new_retired_intersections_lyr,"BOTTOM")
 
         current_active_network_layer_lyr = arcpy.mapping.Layer(current_active_network_layer)
+        current_active_network_layer_lyr.name = "After Edit Network"
         arcpy.mapping.AddLayer(df,current_active_network_layer_lyr,"BOTTOM")
 
         previous_active_network_layer_lyr = arcpy.mapping.Layer(previous_active_network_layer)
+        previous_active_network_layer_lyr.name = "Before Edit Network"
         arcpy.mapping.AddLayer(df,previous_active_network_layer_lyr,"BOTTOM")
 
         arcpy.RefreshActiveView()
