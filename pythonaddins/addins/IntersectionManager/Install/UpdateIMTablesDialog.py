@@ -112,7 +112,7 @@ class UpdateIMTablesDialog(wx.Frame):
                 #                           "Update Intersections Info", wx.YES_NO | wx.ICON_INFORMATION)
                 #
                 # if msg_dlg.ShowModal() == wx.ID_YES:
-                self.progress_bar.Update(10, "Updating Intersection Event...")
+                self.progress_bar.Update(20, "Updating Intersection Event...")
                 update_intersection_event(workspace, last_update_date)
                 self.progress_bar.Update(100, "Finished Updating New Intersection Event")
 
@@ -140,9 +140,6 @@ class UpdateIMTablesDialog(wx.Frame):
                 write_im_meta_data(workspace, None, today_date)
                 clear_table_of_content(workspace)
                 self.progress_bar.Update(100, "Done")
-
-                self.progress_bar.Show(False)
-                self.progress_bar.Destroy()
 
                 dlg = wx.MessageDialog(None,"Update intersection tables success!",
                                       "Update Intersections Info", wx.OK | wx.ICON_INFORMATION)
