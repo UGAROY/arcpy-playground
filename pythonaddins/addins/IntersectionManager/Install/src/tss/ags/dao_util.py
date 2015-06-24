@@ -1,10 +1,13 @@
 import arcpy
+import logging
+logger = logging.getLogger(__name__)
 
 def build_numeric_in_sql_expression(field_name, value_list):
     return "%s in (%s)" % (field_name, ",".join(str(value) for value in value_list)) if len(value_list) > 0 else "1=2"
 
 
 def build_string_in_sql_expression(field_name, value_list):
+    logger.info("%s in (%s)" % (field_name, ",".join("'" + value + "'" for value in value_list)) if len(value_list) > 0 else "1=2")
     return "%s in (%s)" % (field_name, ",".join("'" + value + "'" for value in value_list)) if len(value_list) > 0 else "1=2"
 
 def subset_data_exist(data, where_clause):

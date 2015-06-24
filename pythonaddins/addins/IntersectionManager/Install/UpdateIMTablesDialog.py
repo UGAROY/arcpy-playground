@@ -4,6 +4,7 @@ import traceback
 import datetime
 
 from components.TableDialog import TableDialog
+from components.AgsProgressDialog import AgsProgressDialog
 
 from src.tss import truncate_datetime
 from src.util.helper import get_default_parameters
@@ -94,7 +95,7 @@ class UpdateIMTablesDialog(wx.Frame):
         today_date = truncate_datetime(datetime.datetime.now())
 
         try:
-            if  last_update_date == today_date:
+            if last_update_date == today_date:
                 # If the last_update_date is today, we will have to roll back the changes to the intersection tables
                 # we have made today and also set the last_update_date to one day before to mimic the intersection related
                 # events are all created yesterday. This is a workaround since the date in the network is the only
@@ -102,7 +103,7 @@ class UpdateIMTablesDialog(wx.Frame):
                 roll_back(workspace, last_update_date)
                 last_update_date = last_update_date - datetime.timedelta(days=1)
             elif last_update_date is None:
-                last_update_date = create_date
+                last_update_date = create_date - datetime.timedelta(days=1)
 
             if check_intersection_event_updates(workspace, last_update_date):
                 msg_dlg= wx.MessageDialog(None,"Changes have been made since %s. Do you want to update intersection tables?" % last_update_date,

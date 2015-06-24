@@ -205,16 +205,19 @@ def check_intersection_event_updates(workspace, input_date):
 
     # Data preprocessing-----------------------------------------------------------------
     query_date_string = "CURRENT_TIMESTAMP"
-    query_filter = "({0} is null or {0} <= {2}) and ({1} is null or {1} > {2})".format(function_class_from_date_field, function_class_to_date_field, query_date_string) if function_class_from_date_field and function_class_to_date_field else ""
-    arcpy.MakeFeatureLayer_management(function_class_event, active_current_function_class_layer, query_filter)
-    query_filter = "({0} is null or {0} <= {2}) and ({1} is null or {1} > {2})".format(aadt_from_date_field, aadt_to_date_field, query_date_string) if aadt_from_date_field and aadt_to_date_field else ""
-    arcpy.MakeFeatureLayer_management(aadt_event, active_current_aadt_layer, query_filter)
+
+    if arcpy.Exists(function_class_event):
+        query_filter = "({0} is null or {0} <= {2}) and ({1} is null or {1} > {2})".format(function_class_from_date_field, function_class_to_date_field, query_date_string) if function_class_from_date_field and function_class_to_date_field else ""
+        arcpy.MakeFeatureLayer_management(function_class_event, active_current_function_class_layer, query_filter)
+
+    if arcpy.Exists(aadt_event):
+        query_filter = "({0} is null or {0} <= {2}) and ({1} is null or {1} > {2})".format(aadt_from_date_field, aadt_to_date_field, query_date_string) if aadt_from_date_field and aadt_to_date_field else ""
+        arcpy.MakeFeatureLayer_management(aadt_event, active_current_aadt_layer, query_filter)
     # -------------------------------------------------------------------------------------
 
     """
     Get All Differences Between Previous and Current Dataset
     """
-
     arcpy.MakeFeatureLayer_management(network, previous_active_network_layer, previous_active_network_string)
     # Create current network layer
     arcpy.MakeFeatureLayer_management(network, current_active_network_layer, current_active_network_string)
@@ -234,12 +237,14 @@ def check_intersection_event_updates(workspace, input_date):
             if route_id not in retired_route_ids:
                 retired_route_ids.append(route_id)
     # Get the updated and retired route ids based on the updated functional class and aadt
-    if function_class_from_date_field and function_class_to_date_field:
-        if subset_data_exist(function_class_event, "%s or %s" % (function_class_created_since_date_string, function_class_retired_since_date_string)):
-            created_retired_function_class_exist = True
-    if aadt_from_date_field and aadt_from_date_field:
-        if subset_data_exist(aadt_event, "%s or %s" % (aadt_created_since_date_string, aadt_retired_since_date_string)):
-            created_retired_aadt_exist = True
+    if arcpy.Exists(function_class_event):
+        if function_class_from_date_field and function_class_to_date_field:
+            if subset_data_exist(function_class_event, "%s or %s" % (function_class_created_since_date_string, function_class_retired_since_date_string)):
+                created_retired_function_class_exist = True
+    if arcpy.Exists(aadt_event):
+        if aadt_from_date_field and aadt_from_date_field:
+            if subset_data_exist(aadt_event, "%s or %s" % (aadt_created_since_date_string, aadt_retired_since_date_string)):
+                created_retired_aadt_exist = True
 
     if len(created_route_ids) == 0 and len(retired_route_ids) == 0 and not created_retired_function_class_exist and not created_retired_aadt_exist:
         logger.warning("No change/update has been made since %s" % last_update_date)
@@ -292,10 +297,14 @@ def update_intersection_event(workspace, input_date):
 
     # Data preprocessing-----------------------------------------------------------------
     query_date_string = "CURRENT_TIMESTAMP"
-    query_filter = "({0} is null or {0} <= {2}) and ({1} is null or {1} > {2})".format(function_class_from_date_field, function_class_to_date_field, query_date_string) if function_class_from_date_field and function_class_to_date_field else ""
-    arcpy.MakeFeatureLayer_management(function_class_event, active_current_function_class_layer, query_filter)
-    query_filter = "({0} is null or {0} <= {2}) and ({1} is null or {1} > {2})".format(aadt_from_date_field, aadt_to_date_field, query_date_string) if aadt_from_date_field and aadt_to_date_field else ""
-    arcpy.MakeFeatureLayer_management(aadt_event, active_current_aadt_layer, query_filter)
+
+    if arcpy.Exists(function_class_event):
+        query_filter = "({0} is null or {0} <= {2}) and ({1} is null or {1} > {2})".format(function_class_from_date_field, function_class_to_date_field, query_date_string) if function_class_from_date_field and function_class_to_date_field else ""
+        arcpy.MakeFeatureLayer_management(function_class_event, active_current_function_class_layer, query_filter)
+
+    if arcpy.Exists(aadt_event):
+        query_filter = "({0} is null or {0} <= {2}) and ({1} is null or {1} > {2})".format(aadt_from_date_field, aadt_to_date_field, query_date_string) if aadt_from_date_field and aadt_to_date_field else ""
+        arcpy.MakeFeatureLayer_management(aadt_event, active_current_aadt_layer, query_filter)
     # -------------------------------------------------------------------------------------
 
     """
@@ -320,12 +329,14 @@ def update_intersection_event(workspace, input_date):
             if route_id not in retired_route_ids:
                 retired_route_ids.append(route_id)
     # Get the updated and retired route ids based on the updated functional class and aadt
-    if function_class_from_date_field and function_class_to_date_field:
-        if subset_data_exist(function_class_event, "%s or %s" % (function_class_created_since_date_string, function_class_retired_since_date_string)):
-            created_retired_function_class_exist = True
-    if aadt_from_date_field and aadt_from_date_field:
-        if subset_data_exist(aadt_event, "%s or %s" % (aadt_created_since_date_string, aadt_retired_since_date_string)):
-            created_retired_aadt_exist = True
+    if arcpy.Exists(function_class_event):
+        if function_class_from_date_field and function_class_to_date_field:
+            if subset_data_exist(function_class_event, "%s or %s" % (function_class_created_since_date_string, function_class_retired_since_date_string)):
+                created_retired_function_class_exist = True
+    if arcpy.Exists(aadt_event):
+        if aadt_from_date_field and aadt_from_date_field:
+            if subset_data_exist(aadt_event, "%s or %s" % (aadt_created_since_date_string, aadt_retired_since_date_string)):
+                created_retired_aadt_exist = True
 
     #Created network at all states ----------------------------------------------------------------------------------------------
     inserted_route_ids = list(set(created_route_ids) - set(retired_route_ids))
@@ -458,10 +469,14 @@ def get_new_intersection_event(workspace,input_date):
 
     # Data preprocessing-----------------------------------------------------------------
     query_date_string = "CURRENT_TIMESTAMP"
-    query_filter = "({0} is null or {0} <= {2}) and ({1} is null or {1} > {2})".format(function_class_from_date_field, function_class_to_date_field, query_date_string) if function_class_from_date_field and function_class_to_date_field else ""
-    arcpy.MakeFeatureLayer_management(function_class_event, active_current_function_class_layer, query_filter)
-    query_filter = "({0} is null or {0} <= {2}) and ({1} is null or {1} > {2})".format(aadt_from_date_field, aadt_to_date_field, query_date_string) if aadt_from_date_field and aadt_to_date_field else ""
-    arcpy.MakeFeatureLayer_management(aadt_event, active_current_aadt_layer, query_filter)
+
+    if arcpy.Exists(function_class_event):
+        query_filter = "({0} is null or {0} <= {2}) and ({1} is null or {1} > {2})".format(function_class_from_date_field, function_class_to_date_field, query_date_string) if function_class_from_date_field and function_class_to_date_field else ""
+        arcpy.MakeFeatureLayer_management(function_class_event, active_current_function_class_layer, query_filter)
+
+    if arcpy.Exists(aadt_event):
+        query_filter = "({0} is null or {0} <= {2}) and ({1} is null or {1} > {2})".format(aadt_from_date_field, aadt_to_date_field, query_date_string) if aadt_from_date_field and aadt_to_date_field else ""
+        arcpy.MakeFeatureLayer_management(aadt_event, active_current_aadt_layer, query_filter)
     # -------------------------------------------------------------------------------------
 
     # make a copy of network. Following operations will base on this copy.
@@ -481,7 +496,7 @@ def get_new_intersection_event(workspace,input_date):
     intersections = []
 
     # generate intersection layers for review
-    new_intersection_string = "%s >= %s" % (from_date_field, last_update_date)
+    new_intersection_string = "%s > %s" % (from_date_field, last_update_date)
     new_created_intersections = "new_created_intersections"
     arcpy.MakeFeatureLayer_management(intersection_event,new_created_intersections,new_intersection_string)
 
@@ -596,10 +611,14 @@ def update_intersection_route_event(workspace, input_date):
 
     # Data preprocessing-----------------------------------------------------------------
     query_date_string = "CURRENT_TIMESTAMP"
-    query_filter = "({0} is null or {0} <= {2}) and ({1} is null or {1} > {2})".format(function_class_from_date_field, function_class_to_date_field, query_date_string) if function_class_from_date_field and function_class_to_date_field else ""
-    arcpy.MakeFeatureLayer_management(function_class_event, active_current_function_class_layer, query_filter)
-    query_filter = "({0} is null or {0} <= {2}) and ({1} is null or {1} > {2})".format(aadt_from_date_field, aadt_to_date_field, query_date_string) if aadt_from_date_field and aadt_to_date_field else ""
-    arcpy.MakeFeatureLayer_management(aadt_event, active_current_aadt_layer, query_filter)
+
+    if arcpy.Exists(function_class_event):
+        query_filter = "({0} is null or {0} <= {2}) and ({1} is null or {1} > {2})".format(function_class_from_date_field, function_class_to_date_field, query_date_string) if function_class_from_date_field and function_class_to_date_field else ""
+        arcpy.MakeFeatureLayer_management(function_class_event, active_current_function_class_layer, query_filter)
+
+    if arcpy.Exists(aadt_event):
+        query_filter = "({0} is null or {0} <= {2}) and ({1} is null or {1} > {2})".format(aadt_from_date_field, aadt_to_date_field, query_date_string) if aadt_from_date_field and aadt_to_date_field else ""
+        arcpy.MakeFeatureLayer_management(aadt_event, active_current_aadt_layer, query_filter)
     # -------------------------------------------------------------------------------------
 
     # Create a previous active network layer. This is corresponding to the current state of all the intersection tables
@@ -622,12 +641,15 @@ def update_intersection_route_event(workspace, input_date):
             if route_id not in retired_route_ids:
                 retired_route_ids.append(route_id)
     # Get the updated and retired route ids based on the updated functional class and aadt
-    if function_class_from_date_field and function_class_to_date_field:
-        if subset_data_exist(function_class_event, "%s or %s" % (function_class_created_since_date_string, function_class_retired_since_date_string)):
-            created_retired_function_class_exist = True
-    if aadt_from_date_field and aadt_from_date_field:
-        if subset_data_exist(aadt_event, "%s or %s" % (aadt_created_since_date_string, aadt_retired_since_date_string)):
-            created_retired_aadt_exist = True
+    if arcpy.Exists(function_class_event):
+        if function_class_from_date_field and function_class_to_date_field:
+            if subset_data_exist(function_class_event, "%s or %s" % (function_class_created_since_date_string, function_class_retired_since_date_string)):
+                created_retired_function_class_exist = True
+
+    if arcpy.Exists(aadt_event):
+        if aadt_from_date_field and aadt_from_date_field:
+            if subset_data_exist(aadt_event, "%s or %s" % (aadt_created_since_date_string, aadt_retired_since_date_string)):
+                created_retired_aadt_exist = True
 
     #Created network at all states ----------------------------------------------------------------------------------------------
     inserted_route_ids = list(set(created_route_ids) - set(retired_route_ids))
@@ -780,10 +802,14 @@ def update_roadway_segment_event(workspace, input_date):
 
     # Data preprocessing-----------------------------------------------------------------
     query_date_string = "CURRENT_TIMESTAMP"
-    query_filter = "({0} is null or {0} <= {2}) and ({1} is null or {1} > {2})".format(function_class_from_date_field, function_class_to_date_field, query_date_string) if function_class_from_date_field and function_class_to_date_field else ""
-    arcpy.MakeFeatureLayer_management(function_class_event, active_current_function_class_layer, query_filter)
-    query_filter = "({0} is null or {0} <= {2}) and ({1} is null or {1} > {2})".format(aadt_from_date_field, aadt_to_date_field, query_date_string) if aadt_from_date_field and aadt_to_date_field else ""
-    arcpy.MakeFeatureLayer_management(aadt_event, active_current_aadt_layer, query_filter)
+
+    if arcpy.Exists(function_class_event):
+        query_filter = "({0} is null or {0} <= {2}) and ({1} is null or {1} > {2})".format(function_class_from_date_field, function_class_to_date_field, query_date_string) if function_class_from_date_field and function_class_to_date_field else ""
+        arcpy.MakeFeatureLayer_management(function_class_event, active_current_function_class_layer, query_filter)
+
+    if arcpy.Exists(aadt_event):
+        query_filter = "({0} is null or {0} <= {2}) and ({1} is null or {1} > {2})".format(aadt_from_date_field, aadt_to_date_field, query_date_string) if aadt_from_date_field and aadt_to_date_field else ""
+        arcpy.MakeFeatureLayer_management(aadt_event, active_current_aadt_layer, query_filter)
     # -------------------------------------------------------------------------------------
 
     # Create a previous active network layer. This is corresponding to the current state of all the intersection tables
@@ -806,12 +832,15 @@ def update_roadway_segment_event(workspace, input_date):
             if route_id not in retired_route_ids:
                 retired_route_ids.append(route_id)
     # Get the updated and retired route ids based on the updated functional class and aadt
-    if function_class_from_date_field and function_class_to_date_field:
-        if subset_data_exist(function_class_event, "%s or %s" % (function_class_created_since_date_string, function_class_retired_since_date_string)):
-            created_retired_function_class_exist = True
-    if aadt_from_date_field and aadt_from_date_field:
-        if subset_data_exist(aadt_event, "%s or %s" % (aadt_created_since_date_string, aadt_retired_since_date_string)):
-            created_retired_aadt_exist = True
+    if arcpy.Exists(function_class_event):
+        if function_class_from_date_field and function_class_to_date_field:
+            if subset_data_exist(function_class_event, "%s or %s" % (function_class_created_since_date_string, function_class_retired_since_date_string)):
+                created_retired_function_class_exist = True
+
+    if arcpy.Exists(aadt_event):
+        if aadt_from_date_field and aadt_from_date_field:
+            if subset_data_exist(aadt_event, "%s or %s" % (aadt_created_since_date_string, aadt_retired_since_date_string)):
+                created_retired_aadt_exist = True
 
     #Created network at all states ----------------------------------------------------------------------------------------------
     inserted_route_ids = list(set(created_route_ids) - set(retired_route_ids))
@@ -952,10 +981,14 @@ def update_intersection_approach_event(workspace, input_date):
 
     # Data preprocessing-----------------------------------------------------------------
     query_date_string = "CURRENT_TIMESTAMP"
-    query_filter = "({0} is null or {0} <= {2}) and ({1} is null or {1} > {2})".format(function_class_from_date_field, function_class_to_date_field, query_date_string) if function_class_from_date_field and function_class_to_date_field else ""
-    arcpy.MakeFeatureLayer_management(function_class_event, active_current_function_class_layer, query_filter)
-    query_filter = "({0} is null or {0} <= {2}) and ({1} is null or {1} > {2})".format(aadt_from_date_field, aadt_to_date_field, query_date_string) if aadt_from_date_field and aadt_to_date_field else ""
-    arcpy.MakeFeatureLayer_management(aadt_event, active_current_aadt_layer, query_filter)
+
+    if arcpy.Exists(function_class_event):
+        query_filter = "({0} is null or {0} <= {2}) and ({1} is null or {1} > {2})".format(function_class_from_date_field, function_class_to_date_field, query_date_string) if function_class_from_date_field and function_class_to_date_field else ""
+        arcpy.MakeFeatureLayer_management(function_class_event, active_current_function_class_layer, query_filter)
+
+    if arcpy.Exists(aadt_event):
+        query_filter = "({0} is null or {0} <= {2}) and ({1} is null or {1} > {2})".format(aadt_from_date_field, aadt_to_date_field, query_date_string) if aadt_from_date_field and aadt_to_date_field else ""
+        arcpy.MakeFeatureLayer_management(aadt_event, active_current_aadt_layer, query_filter)
     # -------------------------------------------------------------------------------------
 
     # Create a previous active network layer. This is corresponding to the current state of all the intersection tables
@@ -978,12 +1011,15 @@ def update_intersection_approach_event(workspace, input_date):
             if route_id not in retired_route_ids:
                 retired_route_ids.append(route_id)
     # Get the updated and retired route ids based on the updated functional class and aadt
-    if function_class_from_date_field and function_class_to_date_field:
-        if subset_data_exist(function_class_event, "%s or %s" % (function_class_created_since_date_string, function_class_retired_since_date_string)):
-            created_retired_function_class_exist = True
-    if aadt_from_date_field and aadt_from_date_field:
-        if subset_data_exist(aadt_event, "%s or %s" % (aadt_created_since_date_string, aadt_retired_since_date_string)):
-            created_retired_aadt_exist = True
+    if arcpy.Exists(function_class_event):
+        if function_class_from_date_field and function_class_to_date_field:
+            if subset_data_exist(function_class_event, "%s or %s" % (function_class_created_since_date_string, function_class_retired_since_date_string)):
+                created_retired_function_class_exist = True
+
+    if arcpy.Exists(aadt_event):
+        if aadt_from_date_field and aadt_from_date_field:
+            if subset_data_exist(aadt_event, "%s or %s" % (aadt_created_since_date_string, aadt_retired_since_date_string)):
+                created_retired_aadt_exist = True
 
     #Created network at all states ----------------------------------------------------------------------------------------------
     inserted_route_ids = list(set(created_route_ids) - set(retired_route_ids))
